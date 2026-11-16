@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, deleteTrack, deleteVersion, uid, type TrackVersion } from '../lib/db'
+import { db, deleteTrack, deleteVersion, uid, type Track, type TrackVersion } from '../lib/db'
 import { ACCEPT, analyzeFile } from '../lib/audio/client'
 import type { AnalysisProgress } from '../lib/audio/types'
 import { useApp } from '../components/AppState'
 import AnalysisReport, { fmtTime } from '../components/AnalysisReport'
+import DiagnosisPanel from '../components/DiagnosisPanel'
 
 export default function TrackPage() {
   const { trackId } = useParams()
@@ -122,7 +123,7 @@ export default function TrackPage() {
         </div>
       )}
 
-      {selected && <VersionView key={selected.id} v={selected} busy={busy?.versionId === selected.id} onReanalyze={() => reanalyze(selected)} onDelete={() => removeVersion(selected)} />}
+      {selected && <VersionView key={selected.id} track={track} previous={[...versions].reverse().find((x) => x.createdAt < selected.createdAt && x.analysis)} v={selected} busy={busy?.versionId === selected.id} onReanalyze={() => reanalyze(selected)} onDelete={() => removeVersion(selected)} />}
 
       <div className="section row">
         <div className="spacer" />
@@ -132,7 +133,9 @@ export default function TrackPage() {
   )
 }
 
-function VersionView({ v, busy, onReanalyze, onDelete }: { v: TrackVersion; busy: boolean; onReanalyze: () => void; onDelete: () => void }) {
+function VersionView({ track, previous, v, busy, onReanalyze, onDelete }: { track: Track; previous?: TrackVersion; v: TrackVersion; busy: boolean; onReanalyze: () => void; onDelete: () => void }) {
+  const [tab, setTab] = useState<'report' | 'ai'>('report')
+  const diagCount = useLiveQuery(() => db.diagnoses.where('versionId').equals(v.id).count(), [v.id])
   const [url, setUrl] = useState<string>()
   const [time, setTime] = useState(0)
   const [notes, setNotes] = useState(v.notes)
@@ -178,7 +181,15 @@ function VersionView({ v, busy, onReanalyze, onDelete }: { v: TrackVersion; busy
       </div>
 
       {v.analysisError && !busy && <div className="notice err" style={{ marginTop: 16 }}>{v.analysisError}</div>}
-      {v.analysis ? <AnalysisReport a={v.analysis} time={time} onSeek={seek} /> : !v.analysisError && !busy && <div className="empty" style={{ marginTop: 16 }}>Analisi non disponibile. Premi “Rianalizza”.</div>}
+      {v.analysis && (
+        <div className="tabs section">
+          <button className={tab === 'report' ? 'on' : ''} onClick={() => setTab('report')}>Report misurato</button>
+          <button className={tab === 'ai' ? 'on' : ''} onClick={() => setTab('ai')}>Diagnosi AI{diagCount ? ` (${diagCount})` : ''}</button>
+        </div>
+      )}
+      {v.analysis
+        ? (tab === 'report' ? <AnalysisReport a={v.analysis} time={time} onSeek={seek} /> : <DiagnosisPanel track={track} version={v} previous={previous} />)
+        : !v.analysisError && !busy && <div className="empty" style={{ marginTop: 16 }}>Analisi non disponibile. Premi “Rianalizza”.</div>}
     </div>
   )
 }

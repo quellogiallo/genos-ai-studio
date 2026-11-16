@@ -2,7 +2,7 @@
 
 Assistente creativo privato per progetti musicali e audiovisivi.
 
-**Stato attuale: Music Lab Fase 1** — progetti, memoria creativa, impostazioni AI, backup,
+**Stato attuale: Music Lab Fase 2** — progetti, memoria creativa, impostazioni AI, backup,
 upload e analisi audio misurata. Video / Content / Art sono visibili ma non ancora attivi (nessuna funzione simulata).
 
 ## Music Lab (F1)
@@ -19,6 +19,19 @@ Stimato (può sbagliare, mostrato con affidabilità): BPM (con alternative metà
 (con alternativa, spesso la relativa), sezioni con lettere di somiglianza.
 
 I "Controlli tecnici" sono regole fisse sulle misure, non giudizi artistici.
+
+## Music Lab (F2) — Diagnosi AI
+
+Nella versione di un brano, scheda **Diagnosi AI**. Tre strade:
+- **Diagnosi automatica**: l'AI (Gemini gratuito o Claude API) riceve SOLO i dati misurati + contesto del progetto
+  (decisioni, idee scartate, reference) + confronto con la versione precedente, e risponde nel formato
+  Diagnosi → Problema → Causa → Intervento (Ableton) → Alternative creative.
+- **Ascolto AI** (solo Gemini): il modello ascolta il brano (mono 16 kHz, max 8 minuti) e descrive strumenti
+  e arrangiamento. È una percezione, non una misura.
+- **Copia per Claude**: copia lo stesso prompt per incollarlo in una chat di Claude (usa l'abbonamento, nessuna API);
+  poi incolli la risposta nell'app per salvarla.
+
+Chiave Gemini gratuita: https://aistudio.google.com/apikey → Setup → Google (Gemini) → Salva e verifica.
 
 ## Come si usa
 
@@ -53,5 +66,6 @@ Struttura:
 - `src/lib/db.ts` — database locale e modello Progetto
 - `src/lib/ai/` — livello AI multi-provider (`runTask` sceglie il modello per compito)
 - `src/lib/context.ts` — trasforma il progetto in contesto per l'AI
+- `src/lib/music/diagnosis.ts` — prompt della diagnosi e preparazione audio per l'ascolto
 - `src/lib/audio/` — motore di analisi (loudness, spettro, stime) eseguito in un Web Worker
 - `src/pages/`, `src/components/` — interfaccia

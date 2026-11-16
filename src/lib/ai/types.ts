@@ -4,7 +4,7 @@
  * senza cambiare l'interfaccia utente.
  */
 
-export type ProviderId = 'anthropic' // in futuro: 'google' | 'openai'
+export type ProviderId = 'anthropic' | 'google' // in futuro: 'openai'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -17,6 +17,10 @@ export interface ChatRequest {
   messages: ChatMessage[]
   maxTokens?: number
   signal?: AbortSignal
+  /** audio da far "ascoltare" al modello (solo provider che lo supportano) */
+  audio?: { mime: string; base64: string }
+  /** chiede una risposta in formato JSON (se il provider lo supporta) */
+  json?: boolean
 }
 
 export interface ChatResponse {
@@ -34,6 +38,12 @@ export interface ModelInfo {
 export interface AIProvider {
   id: ProviderId
   label: string
+  /** il provider accetta file audio in input */
+  canListen: boolean
+  keyPrefix: string
+  keyUrl: string
+  /** sceglie un modello predefinito ragionevole dalla lista disponibile */
+  pickDefault(models: ModelInfo[], task: 'strong' | 'fast'): string | undefined
   /** Verifica la chiave e restituisce i modelli disponibili. */
   testConnection(apiKey: string): Promise<ModelInfo[]>
   chat(apiKey: string, req: ChatRequest): Promise<ChatResponse>

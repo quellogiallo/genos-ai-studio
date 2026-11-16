@@ -90,12 +90,27 @@ export interface AudioFile {
   blob: Blob
 }
 
+/** Una diagnosi AI salvata per una versione. */
+export interface Diagnosis {
+  id: string
+  versionId: string
+  kind: 'diagnosi' | 'ascolto'
+  /** auto = chiamata API dall'app · manuale = risposta incollata da Claude */
+  source: 'auto' | 'manuale'
+  provider?: string
+  model?: string
+  userNote: string
+  markdown: string
+  createdAt: number
+}
+
 export const db = new Dexie('genos-ai-studio') as Dexie & {
   projects: EntityTable<Project, 'id'>
   settings: EntityTable<SettingRow, 'key'>
   tracks: EntityTable<Track, 'id'>
   versions: EntityTable<TrackVersion, 'id'>
   audioFiles: EntityTable<AudioFile, 'versionId'>
+  diagnoses: EntityTable<Diagnosis, 'id'>
 }
 
 db.version(1).stores({
@@ -111,10 +126,20 @@ db.version(2).stores({
   audioFiles: 'versionId',
 })
 
+db.version(3).stores({
+  projects: 'id, name, status, updatedAt',
+  settings: 'key',
+  tracks: 'id, projectId, updatedAt',
+  versions: 'id, trackId, createdAt',
+  audioFiles: 'versionId',
+  diagnoses: 'id, versionId, createdAt',
+})
+
 /** Elimina un brano con tutte le versioni e i file audio. */
 export async function deleteTrack(trackId: string) {
-  await db.transaction('rw', db.tracks, db.versions, db.audioFiles, async () => {
+  await db.transaction('rw', [db.tracks, db.versions, db.audioFiles, db.diagnoses], async () => {
     const vs = await db.versions.where('trackId').equals(trackId).primaryKeys()
+    await db.diagnoses.where('versionId').anyOf(vs).delete()
     await db.audioFiles.bulkDelete(vs)
     await db.versions.bulkDelete(vs)
     await db.tracks.delete(trackId)
@@ -122,7 +147,8 @@ export async function deleteTrack(trackId: string) {
 }
 
 export async function deleteVersion(versionId: string) {
-  await db.transaction('rw', db.versions, db.audioFiles, async () => {
+  await db.transaction('rw', [db.versions, db.audioFiles, db.diagnoses], async () => {
+    await db.diagnoses.where('versionId').equals(versionId).delete()
     await db.audioFiles.delete(versionId)
     await db.versions.delete(versionId)
   })

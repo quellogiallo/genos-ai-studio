@@ -7,7 +7,7 @@ import { MODULES } from '../components/Layout'
 export default function HomePage() {
   const { activeProject } = useApp()
   const count = useLiveQuery(() => db.projects.count(), [])
-  const hasKey = useLiveQuery(async () => !!(await getSetting<Record<string, string>>('apiKeys', {})).anthropic, [])
+  const hasKey = useLiveQuery(async () => Object.values(await getSetting<Record<string, string>>('apiKeys', {})).some(Boolean), [])
 
   return (
     <>
@@ -20,7 +20,7 @@ export default function HomePage() {
 
         {hasKey === false && (
           <div className="notice section">
-            Nessuna chiave AI configurata. I progetti funzionano già, le funzioni AI richiedono una chiave.{' '}
+            Nessuna chiave AI configurata. Progetti e analisi audio funzionano già; per la diagnosi automatica aggiungi una chiave (Gemini è gratuito) oppure usa “Copia per Claude”.{' '}
             <Link to="/settings" className="y">Vai al setup →</Link>
           </div>
         )}

@@ -78,7 +78,6 @@ export default function MusicLabPage() {
       <section className="section">
         <div className="section-head"><span className="num">//</span><h2 className="display" style={{ fontSize: '1.2rem' }}>Prossime fasi</h2></div>
         {[
-          ['F2', 'Diagnosi AI: Diagnosi → Problema → Causa → Intervento → Alternative creative'],
           ['F3', 'Confronto versioni: A/B a volume allineato, spettri sovrapposti'],
           ['F4', 'Ableton Assistant, testi e metrica, concept beat, reference'],
         ].map(([id, t]) => <div key={id} className="list-item"><span className="tag">{id}</span><div className="grow dim">{t}</div></div>)}

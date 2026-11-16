@@ -32,7 +32,7 @@ export default function Layout() {
             <span className="idx">//</span>Impostazioni
           </NavLink>
         </nav>
-        <div className="sidebar-foot label">v0.2 · Music Lab F1</div>
+        <div className="sidebar-foot label">v0.3 · Music Lab F2</div>
       </aside>
 
       <main className="main">

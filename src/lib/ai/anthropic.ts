@@ -46,6 +46,18 @@ async function safeFetch(url: string, init: RequestInit): Promise<Response> {
 export const anthropic: AIProvider = {
   id: 'anthropic',
   label: 'Anthropic (Claude)',
+  canListen: false,
+  keyPrefix: 'sk-ant-',
+  keyUrl: 'https://console.anthropic.com/settings/keys',
+  pickDefault(models, task) {
+    const ids = models.map((m) => m.id)
+    const fam = task === 'fast' ? ['haiku', 'sonnet'] : ['opus', 'sonnet']
+    for (const f of fam) {
+      const hit = ids.filter((i) => i.includes(f)).sort().reverse()[0]
+      if (hit) return hit
+    }
+    return ids[0]
+  },
 
   async testConnection(apiKey) {
     if (!apiKey.trim().startsWith('sk-ant-')) {
@@ -61,6 +73,7 @@ export const anthropic: AIProvider = {
   },
 
   async chat(apiKey, req: ChatRequest): Promise<ChatResponse> {
+    if (req.audio) throw new AIError('Claude non può ascoltare file audio. Usa Gemini per l\'ascolto.')
     const res = await safeFetch(`${BASE}/messages`, {
       method: 'POST',
       headers: headers(apiKey.trim()),
