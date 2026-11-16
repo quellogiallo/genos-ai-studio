@@ -44,6 +44,7 @@ export default function MusicLabPage() {
         <>
           <div className="tools section">
             <Link to="/music/assistant" className="tool"><span className="label">Strumento</span><b>Ableton Assistant</b><span className="dim">Istruzioni operative su effetti, routing, synth</span></Link>
+            <div className="tool static"><span className="label">In ogni brano</span><b>Testo e metrica</b><span className="dim">Sillabe, rime, cliché, analisi critica e brainstorming</span></div>
           </div>
           <p className="dim">Brani del progetto <b className="y">{activeProject.name}</b>. Ogni brano può avere più versioni (demo, mix, master) da analizzare e confrontare.</p>
           <form className="card section" onSubmit={create}>

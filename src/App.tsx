@@ -10,6 +10,7 @@ import MusicLabPage from './pages/MusicLabPage'
 import TrackPage from './pages/TrackPage'
 import ComparePage from './pages/ComparePage'
 import { AbletonChat, AbletonHome } from './pages/AbletonPage'
+import LyricsPage from './pages/LyricsPage'
 import VideoLabPage from './pages/VideoLabPage'
 import VideoPage from './pages/VideoPage'
 
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="music" element={<MusicLabPage />} />
             <Route path="music/:trackId" element={<TrackPage />} />
             <Route path="music/:trackId/compare" element={<ComparePage />} />
+            <Route path="music/:trackId/lyrics" element={<LyricsPage />} />
             <Route path="music/assistant" element={<AbletonHome />} />
             <Route path="music/assistant/:chatId" element={<AbletonChat />} />
             <Route path="video" element={<VideoLabPage />} />

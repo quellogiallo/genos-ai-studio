@@ -92,6 +92,8 @@ export default function TrackPage() {
       <div className="label"><Link to="/music">01 / Music Lab</Link> / Brano</div>
       <h1 className="display">{track.title}</h1>
 
+      {versions.length === 0 && <div className="row section"><Link to={`/music/${track.id}/lyrics`} className="btn ghost sm">Testo e metrica →</Link></div>}
+
       {/* ---------- upload ---------- */}
       <div className="card section">
         <div className="label" style={{ marginBottom: 12 }}>Carica una nuova versione</div>
@@ -112,9 +114,10 @@ export default function TrackPage() {
       {/* ---------- versioni ---------- */}
       {versions.length > 0 && (
         <div className="section">
-          {versions.filter((v) => v.analysis).length >= 2 && (
-            <Link to={`/music/${track.id}/compare`} className="btn sm" style={{ marginBottom: 12 }}>Confronta versioni A/B →</Link>
-          )}
+          <div className="row" style={{ marginBottom: 12 }}>
+            {versions.filter((v) => v.analysis).length >= 2 && <Link to={`/music/${track.id}/compare`} className="btn sm">Confronta versioni A/B →</Link>}
+            <Link to={`/music/${track.id}/lyrics`} className="btn ghost sm">Testo e metrica →</Link>
+          </div>
           <div className="versions">
             {versions.map((v) => (
               <button key={v.id} className={`version ${v.id === selectedId ? 'on' : ''}`} onClick={() => setParams({ v: v.id })}>
