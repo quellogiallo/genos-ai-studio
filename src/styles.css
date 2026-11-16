@@ -418,3 +418,23 @@ button.tag.solid:hover { color: #000; }
 .cmp-head { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-dim); background: var(--bg-2); }
 .cmp-group { padding: 10px 12px 4px; color: var(--y); }
 @media (max-width: 560px) { .cmp-row { grid-template-columns: 1fr 58px 58px 52px; padding: 7px 8px; font-size: 12px; } }
+
+/* ================= Music Lab F4: strumenti e chat ================= */
+.tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.tool { display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid var(--line-2); text-decoration: none; transition: border-color 0.15s, transform 0.2s var(--ease), box-shadow 0.2s; }
+.tool b { font-weight: 900; font-stretch: 115%; text-transform: uppercase; font-size: 17px; }
+.tool .dim { font-size: 13px; }
+.tool:hover { border-color: var(--y); transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--y); }
+.chat-link { text-decoration: none; }
+.chat-link:hover b { color: var(--y); }
+.chat-log { display: flex; flex-direction: column; gap: 12px; }
+.msg { padding: 12px 14px; border: 1px solid var(--line); max-width: 100%; overflow-wrap: anywhere; }
+.msg.user { background: var(--bg-2); border-left: 4px solid var(--fg); }
+.msg.assistant { border-left: 4px solid var(--y); }
+.msg .label { margin-bottom: 4px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line-2); background: transparent; padding: 8px 12px; cursor: pointer; font-size: 13px; text-align: left; }
+.chip:hover { border-color: var(--y); color: var(--y); }
+.composer { position: sticky; bottom: 0; background: var(--bg); padding: 12px 0; border-top: 1px solid var(--line); margin-top: 16px; z-index: 3; }
+@media (max-width: 820px) { .composer { bottom: calc(var(--bottom-nav) + env(safe-area-inset-bottom)); } }
+.composer .textarea { min-height: 52px; }

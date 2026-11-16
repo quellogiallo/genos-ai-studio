@@ -69,6 +69,41 @@ export interface Track {
   notes: string
   createdAt: number
   updatedAt: number
+  /** 'reference' = brano di un altro artista usato come riferimento (default: brano tuo) */
+  kind?: 'brano' | 'reference'
+  /** per le reference: artista */
+  artist?: string
+  /** per le reference: aspetti da prendere come riferimento */
+  refFocus?: string[]
+  /** testo del brano (Music Lab · Testi) */
+  lyrics?: string
+  lyricsUpdatedAt?: number
+}
+
+/** Conversazione con l'Ableton Assistant. */
+export interface Chat {
+  id: string
+  projectId: string
+  /** versione di un brano collegata: i suoi dati misurati entrano nel contesto */
+  versionId?: string
+  title: string
+  messages: { role: 'user' | 'assistant'; content: string; model?: string; at: number }[]
+  createdAt: number
+  updatedAt: number
+}
+
+/** Risultati AI generici legati a un brano o a un progetto (analisi testi, concept beat…). */
+export interface AiNote {
+  id: string
+  scope: 'track' | 'project'
+  refId: string
+  kind: 'testo-analisi' | 'testo-brainstorming' | 'beat'
+  userNote: string
+  markdown: string
+  /** dati strutturati (es. concept beat in JSON) */
+  data?: unknown
+  model?: string
+  createdAt: number
 }
 
 /** Una versione (bounce, mix, master…) di un brano, con la sua analisi. */
@@ -114,6 +149,8 @@ export const db = new Dexie('genos-ai-studio') as Dexie & {
   diagnoses: EntityTable<Diagnosis, 'id'>
   videos: EntityTable<VideoProject, 'id'>
   videoImages: EntityTable<VideoImage, 'id'>
+  chats: EntityTable<Chat, 'id'>
+  aiNotes: EntityTable<AiNote, 'id'>
 }
 
 db.version(1).stores({
@@ -150,6 +187,20 @@ db.version(4).stores({
   videoImages: 'id, videoId',
 })
 
+// v5: Music Lab F4 (Ableton Assistant, testi, concept beat)
+db.version(5).stores({
+  projects: 'id, name, status, updatedAt',
+  settings: 'key',
+  tracks: 'id, projectId, updatedAt',
+  versions: 'id, trackId, createdAt',
+  audioFiles: 'versionId',
+  diagnoses: 'id, versionId, createdAt',
+  videos: 'id, projectId, updatedAt',
+  videoImages: 'id, videoId',
+  chats: 'id, projectId, updatedAt',
+  aiNotes: 'id, refId, [refId+kind], createdAt',
+})
+
 /** Elimina un video con tutte le sue immagini (moodboard e schede). */
 export async function deleteVideo(videoId: string) {
   await db.transaction('rw', db.videos, db.videoImages, async () => {
@@ -160,8 +211,9 @@ export async function deleteVideo(videoId: string) {
 
 /** Elimina un brano con tutte le versioni e i file audio. */
 export async function deleteTrack(trackId: string) {
-  await db.transaction('rw', [db.tracks, db.versions, db.audioFiles, db.diagnoses], async () => {
+  await db.transaction('rw', [db.tracks, db.versions, db.audioFiles, db.diagnoses, db.aiNotes], async () => {
     const vs = await db.versions.where('trackId').equals(trackId).primaryKeys()
+    await db.aiNotes.where('refId').equals(trackId).delete()
     await db.diagnoses.where('versionId').anyOf(vs).delete()
     await db.audioFiles.bulkDelete(vs)
     await db.versions.bulkDelete(vs)

@@ -12,7 +12,7 @@ export default function MusicLabPage() {
 
   const tracks = useLiveQuery(async () => {
     if (!activeProject) return []
-    const ts = await db.tracks.where('projectId').equals(activeProject.id).toArray()
+    const ts = (await db.tracks.where('projectId').equals(activeProject.id).toArray()).filter((t) => t.kind !== 'reference')
     ts.sort((a, b) => b.updatedAt - a.updatedAt)
     return Promise.all(ts.map(async (t) => {
       const vs = await db.versions.where('trackId').equals(t.id).sortBy('createdAt')
@@ -42,6 +42,9 @@ export default function MusicLabPage() {
         </div>
       ) : (
         <>
+          <div className="tools section">
+            <Link to="/music/assistant" className="tool"><span className="label">Strumento</span><b>Ableton Assistant</b><span className="dim">Istruzioni operative su effetti, routing, synth</span></Link>
+          </div>
           <p className="dim">Brani del progetto <b className="y">{activeProject.name}</b>. Ogni brano può avere più versioni (demo, mix, master) da analizzare e confrontare.</p>
           <form className="card section" onSubmit={create}>
             <div className="label" style={{ marginBottom: 12 }}>Nuovo brano</div>
