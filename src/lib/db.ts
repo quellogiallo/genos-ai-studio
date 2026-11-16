@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import type { AudioAnalysis } from './audio/types'
 
 /**
  * Database locale (IndexedDB) — tutto resta sul tuo dispositivo.
@@ -59,15 +60,73 @@ export interface SettingRow {
   value: unknown
 }
 
+/** Un brano del Music Lab, dentro un progetto. */
+export interface Track {
+  id: string
+  projectId: string
+  title: string
+  notes: string
+  createdAt: number
+  updatedAt: number
+}
+
+/** Una versione (bounce, mix, master…) di un brano, con la sua analisi. */
+export interface TrackVersion {
+  id: string
+  trackId: string
+  label: string
+  fileName: string
+  mime: string
+  size: number
+  notes: string
+  createdAt: number
+  analysis?: AudioAnalysis
+  analysisError?: string
+}
+
+/** Il file audio originale, separato dai metadati per tenere veloci le liste. */
+export interface AudioFile {
+  versionId: string
+  blob: Blob
+}
+
 export const db = new Dexie('genos-ai-studio') as Dexie & {
   projects: EntityTable<Project, 'id'>
   settings: EntityTable<SettingRow, 'key'>
+  tracks: EntityTable<Track, 'id'>
+  versions: EntityTable<TrackVersion, 'id'>
+  audioFiles: EntityTable<AudioFile, 'versionId'>
 }
 
 db.version(1).stores({
   projects: 'id, name, status, updatedAt',
   settings: 'key',
 })
+
+db.version(2).stores({
+  projects: 'id, name, status, updatedAt',
+  settings: 'key',
+  tracks: 'id, projectId, updatedAt',
+  versions: 'id, trackId, createdAt',
+  audioFiles: 'versionId',
+})
+
+/** Elimina un brano con tutte le versioni e i file audio. */
+export async function deleteTrack(trackId: string) {
+  await db.transaction('rw', db.tracks, db.versions, db.audioFiles, async () => {
+    const vs = await db.versions.where('trackId').equals(trackId).primaryKeys()
+    await db.audioFiles.bulkDelete(vs)
+    await db.versions.bulkDelete(vs)
+    await db.tracks.delete(trackId)
+  })
+}
+
+export async function deleteVersion(versionId: string) {
+  await db.transaction('rw', db.versions, db.audioFiles, async () => {
+    await db.audioFiles.delete(versionId)
+    await db.versions.delete(versionId)
+  })
+}
 
 export const uid = () =>
   (crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`)

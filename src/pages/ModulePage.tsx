@@ -3,15 +3,6 @@
  * Mostra cosa arriverà, senza simulare funzioni che non esistono.
  */
 const INFO: Record<string, { idx: string; title: string; phases: { id: string; text: string }[] }> = {
-  music: {
-    idx: '01', title: 'Music Lab',
-    phases: [
-      { id: 'F1', text: 'Upload audio + analisi misurata: LUFS, true peak, dinamica, spettro, stereo, BPM/tonalità stimati, sezioni' },
-      { id: 'F2', text: 'Diagnosi AI: Diagnosi → Problema → Causa → Intervento → Alternative creative, basata solo sui dati misurati' },
-      { id: 'F3', text: 'Confronto versioni: player A/B a volume allineato, spettri sovrapposti, differenze numeriche' },
-      { id: 'F4', text: 'Ableton Assistant, testi e metrica, concept beat, archivio reference' },
-    ],
-  },
   video: { idx: '02', title: 'Video Lab', phases: [{ id: '—', text: 'Sceneggiature, storyboard, shot list, prompt video. Da pianificare dopo il Music Lab.' }] },
   content: { idx: '03', title: 'Content Lab', phases: [{ id: '—', text: 'Script short, calendari editoriali, analisi performance. Da pianificare.' }] },
   art: { idx: '04', title: 'Art Direction', phases: [{ id: '—', text: 'Moodboard, palette, identità visiva, prompt immagini. Da pianificare.' }] },

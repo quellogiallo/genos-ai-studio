@@ -246,3 +246,56 @@ h2.display { font-size: clamp(1.4rem, 4vw, 2rem); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ================= Music Lab ================= */
+.metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.metric { background: var(--bg); padding: 14px; min-width: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.metric-val { font-weight: 900; font-stretch: 115%; font-size: 26px; line-height: 1.1; margin-top: 6px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.metric-val small { font-family: var(--mono); font-size: 11px; font-weight: 400; color: var(--fg-dim); }
+.metric-hint { font-size: 12px; color: var(--fg-dim); margin-top: 4px; line-height: 1.35; }
+
+.chart { display: block; width: 100%; background: var(--bg); touch-action: pan-y; cursor: crosshair; }
+.chart-wrap { border: 1px solid var(--line); margin-top: 16px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 8px 10px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+.lg::before { content: ''; display: inline-block; width: 10px; height: 3px; background: var(--fg-dim); margin-right: 6px; vertical-align: middle; }
+.lg.y::before { background: var(--y); } .lg.dim::before { background: var(--fg-dim); } .lg.mute::before { background: #3a3a30; } .lg.red::before { background: var(--red); }
+.lg.y { color: var(--y); } .lg.mute, .lg.dim { color: var(--fg-dim); }
+
+.check { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.check-dot { width: 10px; height: 10px; margin-top: 6px; flex: none; background: var(--fg-mute); }
+.check.alert .check-dot { background: var(--red); }
+.check.warn .check-dot { background: var(--y); }
+.check.ok .check-dot { background: var(--green); }
+.check.info .check-dot { background: transparent; border: 2px solid var(--fg-dim); }
+
+.bands { margin-top: 16px; }
+.band { display: grid; grid-template-columns: 150px 1fr 72px 72px; gap: 12px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.band-name { display: flex; flex-direction: column; line-height: 1.2; }
+.band-bar { height: 10px; background: var(--bg-3); }
+.band-bar span { display: block; height: 100%; background: var(--y); transition: width 0.4s var(--ease); }
+.band-val, .band-w { font-size: 12px; text-align: right; }
+.band-w { color: var(--fg-dim); }
+@media (max-width: 560px) { .band { grid-template-columns: 96px 1fr 62px; } .band-w { grid-column: 3; } .band-name .label { font-size: 9px; } }
+
+.conf { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.conf-bar { width: 60px; height: 4px; background: var(--bg-3); }
+.conf-bar span { display: block; height: 100%; background: var(--y); }
+
+.section-row { display: flex; gap: 14px; align-items: center; width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-top: 0; background: transparent; cursor: pointer; text-align: left; font-size: 13px; }
+.section-row:first-child { border-top: 1px solid var(--line); }
+.section-row:hover { background: var(--bg-2); }
+.sec-letter { width: 26px; height: 26px; display: grid; place-items: center; background: var(--y); color: #000; font-weight: 900; }
+
+.progress { height: 6px; background: var(--bg-3); margin-top: 8px; }
+.progress span { display: block; height: 100%; background: var(--y); transition: width 0.2s; }
+
+.versions { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.version { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; border: 1px solid var(--line-2); background: var(--bg); cursor: pointer; text-align: left; }
+.version .mono { font-size: 11px; color: var(--fg-dim); }
+.version:hover { border-color: var(--fg); }
+.version.on { background: var(--y); border-color: var(--y); color: #000; }
+.version.on .mono { color: #000; }
+
+.player { border: 1px solid var(--line-2); padding: 12px; background: var(--bg-2); position: sticky; top: 57px; z-index: 4; }
+@media (max-width: 820px) { .player { top: 49px; } }
+audio { filter: invert(1) hue-rotate(180deg) contrast(0.9); height: 40px; }
