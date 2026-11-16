@@ -48,6 +48,16 @@ Nella versione di un brano, scheda **Diagnosi AI**. Tre strade:
 - **Copia per Claude**: copia lo stesso prompt per incollarlo in una chat di Claude (usa l'abbonamento, nessuna API);
   poi incolli la risposta nell'app per salvarla.
 
+## Music Lab (F3) — Confronto versioni
+
+Nella pagina del brano: **Confronta versioni A/B** (servono 2 versioni analizzate).
+- Lettore A/B: le due versioni suonano sincronizzate, il cambio è istantaneo alla stessa posizione.
+  "Volume allineato" abbassa la più forte della differenza di LUFS (Web Audio, funziona anche su iPhone).
+- Allineamento automatico (attacchi, risoluzione 10 ms) se una versione parte prima; regolabile a mano.
+- Loudness nel tempo sovrapposta, controlli risolti/nuovi, tabella delle differenze, spettri sovrapposti
+  e differenza spettrale a parità di volume.
+- Valutazione AI del confronto (o Copia per Claude), salvata sulla versione B.
+
 Chiave Gemini gratuita: https://aistudio.google.com/apikey → Setup → Google (Gemini) → Salva e verifica.
 
 ## Come si usa

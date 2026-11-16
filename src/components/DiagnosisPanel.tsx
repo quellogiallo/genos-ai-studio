@@ -140,13 +140,13 @@ export default function DiagnosisPanel({ track, version, previous }: { track: Tr
   )
 }
 
-function DiagnosisCard({ d }: { d: Diagnosis }) {
+export function DiagnosisCard({ d }: { d: Diagnosis }) {
   const { toast } = useApp()
   const [open, setOpen] = useState(true)
   return (
     <article className="diag">
       <header className="row diag-head" onClick={() => setOpen((o) => !o)}>
-        <span className={`tag ${d.kind === 'ascolto' ? 'y' : 'solid'}`}>{d.kind === 'ascolto' ? 'Ascolto AI' : 'Diagnosi'}</span>
+        <span className={`tag ${d.kind === 'diagnosi' ? 'solid' : 'y'}`}>{d.kind === 'ascolto' ? 'Ascolto AI' : d.kind === 'confronto' ? 'Confronto' : 'Diagnosi'}</span>
         <span className="label">{d.source === 'manuale' ? 'Claude (incollata)' : d.model} · {new Date(d.createdAt).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</span>
         <div className="spacer" />
         <span className="mono dim">{open ? '−' : '+'}</span>

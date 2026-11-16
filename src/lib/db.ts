@@ -95,7 +95,7 @@ export interface AudioFile {
 export interface Diagnosis {
   id: string
   versionId: string
-  kind: 'diagnosi' | 'ascolto'
+  kind: 'diagnosi' | 'ascolto' | 'confronto'
   /** auto = chiamata API dall'app · manuale = risposta incollata da Claude */
   source: 'auto' | 'manuale'
   provider?: string

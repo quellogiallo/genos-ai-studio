@@ -112,6 +112,9 @@ export default function TrackPage() {
       {/* ---------- versioni ---------- */}
       {versions.length > 0 && (
         <div className="section">
+          {versions.filter((v) => v.analysis).length >= 2 && (
+            <Link to={`/music/${track.id}/compare`} className="btn sm" style={{ marginBottom: 12 }}>Confronta versioni A/B →</Link>
+          )}
           <div className="versions">
             {versions.map((v) => (
               <button key={v.id} className={`version ${v.id === selectedId ? 'on' : ''}`} onClick={() => setParams({ v: v.id })}>

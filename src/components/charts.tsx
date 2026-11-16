@@ -198,3 +198,66 @@ export function Spectrogram({ a, time, onSeek }: { a: AudioAnalysis; time?: numb
   }, [a, time, imgRef.current])
   return <canvas ref={ref} className="chart" style={{ height: 180 }} onPointerDown={seekHandler(a.duration, onSeek)} />
 }
+
+/* ------------------- confronto: loudness di due versioni sovrapposte ------------------- */
+export function LoudnessOverlay({ a, b, offset, time, onSeek }: { a: AudioAnalysis; b: AudioAnalysis; offset: number; time?: number; onSeek?: (t: number) => void }) {
+  const duration = Math.max(a.duration, b.duration - offset)
+  const ref = useCanvas((ctx, w, h) => {
+    const top = 8, bottom = 16, ph = h - top - bottom
+    const lo = -40, hi = 0
+    const yOf = (l: number) => top + ((hi - Math.max(lo, Math.min(hi, l))) / (hi - lo)) * ph
+    ctx.font = MONO
+    for (const l of [-10, -20, -30]) {
+      ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, yOf(l) + 0.5); ctx.lineTo(w, yOf(l) + 0.5); ctx.stroke()
+      ctx.fillStyle = C.mute; ctx.fillText(`${l}`, w - 24, yOf(l) - 3)
+    }
+    const line = (an: AudioAnalysis, shift: number, color: string, dash: number[]) => {
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash(dash); ctx.beginPath()
+      let started = false
+      an.timeline.shortTerm.forEach((l, i) => {
+        const t = i * an.timeline.step + 1.5 - shift
+        if (t < 0) return
+        const x = (t / duration) * w, y = yOf(l)
+        if (started) ctx.lineTo(x, y); else { ctx.moveTo(x, y); started = true }
+      })
+      ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1
+    }
+    line(a, 0, C.y, [])
+    line(b, offset, C.fg, [5, 4])
+    ctx.fillStyle = C.mute
+    const stepS = duration > 240 ? 60 : duration > 60 ? 30 : 10
+    for (let t = stepS; t < duration; t += stepS) ctx.fillText(fmtTime(t), (t / duration) * w - 10, h - 3)
+    drawPlayhead(ctx, time, duration, w, h)
+  }, [a, b, offset, time])
+  return <canvas ref={ref} className="chart" style={{ height: 180 }} onPointerDown={seekHandler(duration, onSeek)} />
+}
+
+/* ------------------- confronto: differenza spettrale B − A ------------------- */
+export function SpectrumDiffChart({ points }: { points: { f: number; d: number }[] }) {
+  const ref = useCanvas((ctx, w, h) => {
+    const left = 30, bottom = 16, pw = w - left, ph = h - bottom
+    const fLo = 20, fHi = 20000, R = 9
+    const xOf = (f: number) => left + (Math.log(f / fLo) / Math.log(fHi / fLo)) * pw
+    const yOf = (d: number) => ph / 2 - (Math.max(-R, Math.min(R, d)) / R) * (ph / 2)
+    ctx.font = MONO
+    for (const f of [50, 100, 200, 500, 1000, 2000, 5000, 10000]) {
+      ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(xOf(f) + 0.5, 0); ctx.lineTo(xOf(f) + 0.5, ph); ctx.stroke()
+      ctx.fillStyle = C.mute; ctx.fillText(f >= 1000 ? `${f / 1000}k` : `${f}`, xOf(f) - 8, h - 3)
+    }
+    for (const d of [6, 3, 0, -3, -6]) {
+      ctx.strokeStyle = d === 0 ? C.dim : C.line; ctx.beginPath(); ctx.moveTo(left, yOf(d) + 0.5); ctx.lineTo(w, yOf(d) + 0.5); ctx.stroke()
+      ctx.fillStyle = C.mute; ctx.fillText(`${d > 0 ? '+' : ''}${d}`, 2, yOf(d) + 3)
+    }
+    // area positiva gialla, negativa grigia
+    for (const sign of [1, -1]) {
+      ctx.fillStyle = sign > 0 ? 'rgba(255,212,0,0.35)' : 'rgba(154,154,148,0.3)'
+      ctx.beginPath(); ctx.moveTo(xOf(points[0].f), yOf(0))
+      points.forEach((p) => ctx.lineTo(xOf(p.f), yOf(sign > 0 ? Math.max(0, p.d) : Math.min(0, p.d))))
+      ctx.lineTo(xOf(points[points.length - 1].f), yOf(0)); ctx.closePath(); ctx.fill()
+    }
+    ctx.strokeStyle = C.fg; ctx.lineWidth = 1.5; ctx.beginPath()
+    points.forEach((p, i) => { const x = xOf(p.f), y = yOf(p.d); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y) })
+    ctx.stroke(); ctx.lineWidth = 1
+  }, [points])
+  return <canvas ref={ref} className="chart" style={{ height: 180 }} />
+}

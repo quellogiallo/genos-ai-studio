@@ -8,6 +8,8 @@ export interface RunnerPrompt {
   system: string
   user: string
   maxTokens: number
+  /** risposta in JSON (default true); false per testo/markdown */
+  json?: boolean
 }
 
 /**
@@ -40,7 +42,7 @@ export default function AiRunner({ label, build, onResult, disabledReason }: {
     try {
       const p = await build()
       const r = await runTask(p.task, {
-        system: p.system, messages: [{ role: 'user', content: p.user }], maxTokens: p.maxTokens, signal: abort.current.signal, json: true,
+        system: p.system, messages: [{ role: 'user', content: p.user }], maxTokens: p.maxTokens, signal: abort.current.signal, json: p.json ?? true,
       })
       await onResult(r.text)
       setMeta(`${r.model} · ${r.inputTokens ?? '?'} in / ${r.outputTokens ?? '?'} out token`)

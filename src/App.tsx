@@ -8,6 +8,7 @@ import SettingsPage from './pages/SettingsPage'
 import ModulePage from './pages/ModulePage'
 import MusicLabPage from './pages/MusicLabPage'
 import TrackPage from './pages/TrackPage'
+import ComparePage from './pages/ComparePage'
 import VideoLabPage from './pages/VideoLabPage'
 import VideoPage from './pages/VideoPage'
 
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="projects/:id" element={<ProjectDetailPage />} />
             <Route path="music" element={<MusicLabPage />} />
             <Route path="music/:trackId" element={<TrackPage />} />
+            <Route path="music/:trackId/compare" element={<ComparePage />} />
             <Route path="video" element={<VideoLabPage />} />
             <Route path="video/:videoId" element={<VideoPage />} />
             <Route path="content" element={<ModulePage id="content" />} />
