@@ -78,7 +78,7 @@ export default function SettingsPage() {
 
       <section className="section">
         <div className="section-head"><span className="num">03</span><h2 className="display" style={{ fontSize: '1.2rem' }}>Backup</h2></div>
-        <p className="dim" style={{ marginTop: -6, fontSize: 13 }}>I progetti sono salvati nel browser di questo dispositivo. Esporta un backup ogni tanto: se cancelli i dati del browser, li perdi. Il backup contiene i progetti (concept, decisioni, reference, obiettivi), non le chiavi API né i file audio del Music Lab: tieni i tuoi bounce anche altrove.</p>
+        <p className="dim" style={{ marginTop: -6, fontSize: 13 }}>I progetti sono salvati nel browser di questo dispositivo. Esporta un backup ogni tanto: se cancelli i dati del browser, li perdi. Il backup contiene i progetti (concept, decisioni, reference, obiettivi) e i testi del Video Lab (concept, direzione, schede, sceneggiatura), non le chiavi API, né i file audio del Music Lab, né le immagini di moodboard e schede: tieni quei file anche altrove.</p>
         <div className="row">
           <button className="btn" onClick={doExport}>Esporta backup</button>
           <button className="btn ghost" onClick={() => fileRef.current?.click()}>Importa backup</button>

@@ -8,6 +8,8 @@ import SettingsPage from './pages/SettingsPage'
 import ModulePage from './pages/ModulePage'
 import MusicLabPage from './pages/MusicLabPage'
 import TrackPage from './pages/TrackPage'
+import VideoLabPage from './pages/VideoLabPage'
+import VideoPage from './pages/VideoPage'
 
 // HashRouter: necessario su GitHub Pages (nessun server che gestisce le rotte)
 export default function App() {
@@ -21,7 +23,8 @@ export default function App() {
             <Route path="projects/:id" element={<ProjectDetailPage />} />
             <Route path="music" element={<MusicLabPage />} />
             <Route path="music/:trackId" element={<TrackPage />} />
-            <Route path="video" element={<ModulePage id="video" />} />
+            <Route path="video" element={<VideoLabPage />} />
+            <Route path="video/:videoId" element={<VideoPage />} />
             <Route path="content" element={<ModulePage id="content" />} />
             <Route path="art" element={<ModulePage id="art" />} />
             <Route path="settings" element={<SettingsPage />} />

@@ -2,8 +2,25 @@
 
 Assistente creativo privato per progetti musicali e audiovisivi.
 
-**Stato attuale: Music Lab Fase 2** — progetti, memoria creativa, impostazioni AI, backup,
-upload e analisi audio misurata. Video / Content / Art sono visibili ma non ancora attivi (nessuna funzione simulata).
+**Stato attuale: Music Lab Fase 2 + Video Lab Fase 1** — progetti, memoria creativa, impostazioni AI, backup,
+analisi audio misurata, e il percorso video da concept a sceneggiatura. Content / Art sono visibili ma non ancora attivi (nessuna funzione simulata).
+
+## Video Lab (V1)
+
+Progetto attivo → Video Lab → crea un video → segui i passi:
+
+1. **Concept** — scrivi l'idea; l'AI la analizza in modo critico (debolezze, cliché) e ti fa domande. Le tue risposte diventano vincoli.
+2. **Direzione artistica** — tre proposte diverse con palette, look, luce, camera, motivazione e limiti. Ne scegli una; quelle scartate finiscono tra le *idee scartate* del progetto e non vengono riproposte.
+3. **Moodboard** — immagini e link. I colori dominanti delle immagini sono misurati dall'app. L'AI non vede le immagini: legge le tue note e suggerisce cosa cercare.
+4. **Schede condivise** — personaggi, ambienti, oggetti: la fonte unica della coerenza tra le scene.
+5. **Sceneggiatura** — scene con azione, schede coinvolte, musica, durata. L'app controlla la durata totale e segnala i nomi senza scheda.
+
+Se colleghi un brano del Music Lab, le scene usano durata e sezioni misurate.
+
+**Senza chiave a pagamento:** i passi AI funzionano con qualsiasi chiave salvata in Setup (anche Gemini gratuita). In alternativa ogni passo AI ha la modalità manuale — *Copia prompt*, incollalo in una chat di Claude
+(abbonamento), poi incolla la risposta nell'app. Il risultato è identico e non ha costi aggiuntivi.
+
+Passi 06–11 (storyboard, shot list, prompt per scena, riprese, montaggio, color, export) arrivano con V2 e V3.
 
 ## Music Lab (F1)
 
@@ -68,4 +85,6 @@ Struttura:
 - `src/lib/context.ts` — trasforma il progetto in contesto per l'AI
 - `src/lib/music/diagnosis.ts` — prompt della diagnosi e preparazione audio per l'ascolto
 - `src/lib/audio/` — motore di analisi (loudness, spettro, stime) eseguito in un Web Worker
+- `src/lib/video/` — modello dati del Video Lab, prompt e controllo delle risposte AI, colori dominanti
+- `src/components/AiRunner.tsx` — esegue un passo AI via API oppure in modalità manuale (copia/incolla)
 - `src/pages/`, `src/components/` — interfaccia

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, deleteTrack, saveProject, uid, type Decision, type Project, type ProjectStatus, type ProjectType } from '../lib/db'
+import { db, deleteTrack, deleteVideo, saveProject, uid, type Decision, type Project, type ProjectStatus, type ProjectType } from '../lib/db'
 import { useApp } from '../components/AppState'
 import { TYPE_LABEL } from './ProjectsPage'
 
@@ -30,9 +30,11 @@ export default function ProjectDetailPage() {
   }
 
   const remove = async () => {
-    if (!confirm(`Eliminare definitivamente "${project.name}" con tutti i brani e i file audio?`)) return
+    if (!confirm(`Eliminare definitivamente "${project.name}" con tutti i brani, i file audio e i video?`)) return
     const tracks = await db.tracks.where('projectId').equals(project.id).primaryKeys()
     for (const t of tracks) await deleteTrack(t)
+    const videos = await db.videos.where('projectId').equals(project.id).primaryKeys()
+    for (const v of videos) await deleteVideo(v)
     await db.projects.delete(project.id)
     if (activeProject?.id === project.id) setActiveProjectId(null)
     toast('Progetto eliminato')

@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { AudioAnalysis } from './audio/types'
+import type { VideoImage, VideoProject } from './video/types'
 
 /**
  * Database locale (IndexedDB) — tutto resta sul tuo dispositivo.
@@ -111,6 +112,8 @@ export const db = new Dexie('genos-ai-studio') as Dexie & {
   versions: EntityTable<TrackVersion, 'id'>
   audioFiles: EntityTable<AudioFile, 'versionId'>
   diagnoses: EntityTable<Diagnosis, 'id'>
+  videos: EntityTable<VideoProject, 'id'>
+  videoImages: EntityTable<VideoImage, 'id'>
 }
 
 db.version(1).stores({
@@ -134,6 +137,26 @@ db.version(3).stores({
   audioFiles: 'versionId',
   diagnoses: 'id, versionId, createdAt',
 })
+
+// v4: Video Lab
+db.version(4).stores({
+  projects: 'id, name, status, updatedAt',
+  settings: 'key',
+  tracks: 'id, projectId, updatedAt',
+  versions: 'id, trackId, createdAt',
+  audioFiles: 'versionId',
+  diagnoses: 'id, versionId, createdAt',
+  videos: 'id, projectId, updatedAt',
+  videoImages: 'id, videoId',
+})
+
+/** Elimina un video con tutte le sue immagini (moodboard e schede). */
+export async function deleteVideo(videoId: string) {
+  await db.transaction('rw', db.videos, db.videoImages, async () => {
+    await db.videoImages.where('videoId').equals(videoId).delete()
+    await db.videos.delete(videoId)
+  })
+}
 
 /** Elimina un brano con tutte le versioni e i file audio. */
 export async function deleteTrack(trackId: string) {
@@ -187,18 +210,20 @@ export async function setSetting(key: string, value: unknown) {
   await db.settings.put({ key, value })
 }
 
-/** Esporta tutto in JSON (backup manuale). */
+/** Esporta tutto in JSON (backup manuale). Non include file audio e immagini. */
 export async function exportAll() {
   const projects = await db.projects.toArray()
-  return JSON.stringify({ app: 'genos-ai-studio', version: 1, exportedAt: new Date().toISOString(), projects }, null, 2)
+  const videos = await db.videos.toArray()
+  return JSON.stringify({ app: 'genos-ai-studio', version: 2, exportedAt: new Date().toISOString(), projects, videos }, null, 2)
 }
 
-/** Importa un backup: unisce i progetti (sovrascrive quelli con lo stesso id). */
+/** Importa un backup: unisce progetti e video (sovrascrive quelli con lo stesso id). */
 export async function importAll(json: string): Promise<number> {
   const data = JSON.parse(json)
   if (data?.app !== 'genos-ai-studio' || !Array.isArray(data.projects)) {
     throw new Error('Il file non è un backup valido di GENOS AI STUDIO.')
   }
   await db.projects.bulkPut(data.projects as Project[])
+  if (Array.isArray(data.videos)) await db.videos.bulkPut(data.videos as VideoProject[])
   return data.projects.length
 }
