@@ -6,6 +6,7 @@ import { ACCEPT, analyzeFile } from '../lib/audio/client'
 import type { AnalysisProgress } from '../lib/audio/types'
 import { useApp } from '../components/AppState'
 import { fmtTime } from '../components/AnalysisReport'
+import Amber from '../components/Amber'
 
 export const FOCUS = ['Loudness e dinamica', 'Basse frequenze', 'Immagine stereo', 'Bilanciamento tonale', 'Voce', 'Arrangiamento', 'Sound design', 'Mood']
 
@@ -72,7 +73,7 @@ export default function ReferencesPage() {
           <button className="btn primary" disabled={!title.trim() || !!busy} onClick={() => fileRef.current?.click()}>Scegli file audio e analizza</button>
           <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = '' }} />
         </div>
-        {busy && <div style={{ marginTop: 12 }}><div className="row"><div className="spinner" /><b>{busy.stage}</b><div className="spacer" /><span className="mono">{Math.round(busy.pct * 100)}%</span></div><div className="progress"><span style={{ width: `${busy.pct * 100}%` }} /></div></div>}
+        {busy && <div style={{ marginTop: 12 }}><Amber pct={busy.pct * 100} label={busy.stage} /></div>}
       </div>
 
       <section className="section">
