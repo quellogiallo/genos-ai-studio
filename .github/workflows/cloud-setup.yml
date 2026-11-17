@@ -1,0 +1,62 @@
+name: Configura database cloud (una tantum)
+# Crea il database Dexie Cloud dell'app in due passaggi, senza bisogno del terminale.
+# L'email è letta dal secret DEXIE_EMAIL e non compare mai nei log.
+on:
+  workflow_dispatch:
+    inputs:
+      step:
+        description: "request = invia il codice via email · create = crea il database"
+        required: true
+        default: request
+      otp_id:
+        description: "Solo per create: otp_id stampato dal passaggio request"
+        required: false
+      otp:
+        description: "Solo per create: il codice ricevuto via email"
+        required: false
+permissions:
+  contents: read
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dexie Cloud
+        env:
+          EMAIL: ${{ secrets.DEXIE_EMAIL }}
+          STEP: ${{ inputs.step }}
+          OTP_ID: ${{ inputs.otp_id }}
+          OTP: ${{ inputs.otp }}
+        run: |
+          echo "::add-mask::$EMAIL"
+          [ -n "$OTP" ] && echo "::add-mask::$OTP"
+          node --input-type=module -e '
+          const S = "https://dexie.cloud";
+          const { EMAIL, STEP, OTP_ID, OTP } = process.env;
+          if (!EMAIL) { console.error("Manca il secret DEXIE_EMAIL"); process.exit(1) }
+          const post = async (url, body, token) => {
+            const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json", ...(token ? { authorization: "Bearer " + token } : {}) }, body: JSON.stringify(body) });
+            const t = await r.text(); let j; try { j = JSON.parse(t) } catch { j = t }
+            if (!r.ok) { console.error("Errore", r.status, url.replace(/https:\/\/[^/]+/, "<server>"), typeof j === "string" ? j.slice(0, 300) : JSON.stringify(j).slice(0, 300)); process.exit(1) }
+            return j;
+          };
+          if (STEP === "request") {
+            const r = await post(S + "/token", { grant_type: "otp", email: EMAIL, scopes: ["CREATE_DB"] });
+            if (r.type !== "otp-sent") { console.error("Risposta inattesa", r.type); process.exit(1) }
+            console.log("OTP_ID=" + r.otp_id);
+            console.log("Codice inviato: controlla la tua email.");
+          } else if (STEP === "create") {
+            const t = await post(S + "/token", { grant_type: "otp", email: EMAIL, scopes: ["CREATE_DB"], otp_id: OTP_ID, otp: OTP });
+            if (t.type !== "tokens") { console.error("Codice non valido o scaduto"); process.exit(1) }
+            console.log("::add-mask::" + t.accessToken);
+            const db = await post(S + "/create-db", { timeZone: "Europe/Rome" }, t.accessToken);
+            if (!db.url) { console.error("Creazione non riuscita", JSON.stringify(db).slice(0, 300)); process.exit(1) }
+            console.log("::add-mask::" + db.clientSecret);
+            const c = await post(db.url + "/token", { grant_type: "client_credentials", client_id: db.clientId, client_secret: db.clientSecret, scopes: ["ACCESS_DB", "MANAGE_DB"] });
+            console.log("::add-mask::" + c.accessToken);
+            for (const origin of ["https://quellogiallo.github.io", "http://localhost:5173", "http://localhost:4173"]) {
+              await post(db.url + "/whitelist", { origin }, c.accessToken);
+              console.log("Origine autorizzata:", origin);
+            }
+            console.log("DATABASE_URL=" + db.url);
+          } else { console.error("step deve essere request o create"); process.exit(1) }
+          '
