@@ -78,8 +78,8 @@ function CompareView({ A, B, track, reference }: { A: TrackVersion; B: TrackVers
     if (reference) { setAuto({ offset: 0, confidence: 0 }); return }
     let alive = true
     Promise.all([db.audioFiles.get(A.id), db.audioFiles.get(B.id)])
-      .then(([fa, fb]) => (fa && fb ? estimateOffset(fa.blob, fb.blob) : null))
-      .then((r) => { if (!alive || !r) return; setAuto(r); if (r.confidence > 0.4) setOffset(r.offset) })
+      .then(([fa, fb]) => (fa && fb ? estimateOffset(fa.blob, fb.blob) : { offset: 0, confidence: 0 }))
+      .then((r) => { if (!alive) return; setAuto(r); if (r.confidence > 0.4) setOffset(r.offset) })
       .catch(() => alive && setAuto({ offset: 0, confidence: 0 }))
     return () => { alive = false }
   }, [A.id, B.id])

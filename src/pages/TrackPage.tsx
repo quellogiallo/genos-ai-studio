@@ -150,7 +150,7 @@ function VersionView({ track, previous, v, busy, onReanalyze, onDelete }: { trac
 
   useEffect(() => {
     let u: string | undefined
-    db.audioFiles.get(v.id).then((f) => { if (f) { u = URL.createObjectURL(f.blob); setUrl(u) } })
+    db.audioFiles.get(v.id).then((f) => { if (f) { u = URL.createObjectURL(f.blob); setUrl(u) } else setUrl('') })
     return () => { if (u) URL.revokeObjectURL(u) }
   }, [v.id])
 
@@ -177,7 +177,7 @@ function VersionView({ track, previous, v, busy, onReanalyze, onDelete }: { trac
           <div className="spacer" />
           <span className="mono">{fmtTime(time)}</span>
         </div>
-        {url ? <audio ref={audioRef} src={url} controls preload="metadata" style={{ width: '100%', marginTop: 8 }} /> : <div className="dim">Caricamento audio…</div>}
+        {url ? <audio ref={audioRef} src={url} controls preload="metadata" style={{ width: '100%', marginTop: 8 }} /> : url === '' ? <div className="dim" style={{ marginTop: 6, fontSize: 13 }}>File audio non presente su questo dispositivo (importato da un backup senza audio). Analisi e diagnosi restano consultabili; per ascoltare o rianalizzare ricarica il file come nuova versione.</div> : <div className="dim">Caricamento audio…</div>}
       </div>
 
       <div className="row" style={{ marginTop: 12 }}>

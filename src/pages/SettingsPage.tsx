@@ -20,6 +20,8 @@ export default function SettingsPage() {
   const [trial, setTrial] = useState<{ busy: boolean; out?: string; err?: string }>({ busy: false })
   const fileRef = useRef<HTMLInputElement>(null)
   const [refresh, setRefresh] = useState(0)
+  const [includeAudio, setIncludeAudio] = useState(false)
+  const [backupBusy, setBackupBusy] = useState(false)
 
   const keys = useLiveQuery(() => getSetting<Record<string, string>>('apiKeys', {}), [refresh])
   const hasAny = keys && Object.values(keys).some(Boolean)
@@ -39,17 +41,26 @@ export default function SettingsPage() {
   }
 
   async function doExport() {
-    const json = await exportAll()
-    const blob = new Blob([json], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `genos-backup-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(a.href)
+    setBackupBusy(true)
+    try {
+      const blob = await exportAll({ includeAudio })
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `genos-backup-${new Date().toISOString().slice(0, 10)}${includeAudio ? '-con-audio' : ''}.json`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000)
+      toast(`Backup pronto (${(blob.size / 1048576).toFixed(1)} MB)`)
+    } catch (e) {
+      toast(`Backup non riuscito: ${(e as Error).message}`, 'err')
+    } finally { setBackupBusy(false) }
   }
 
   async function doImport(f: File) {
-    try { toast(`${await importAll(await f.text())} progetti importati`) } catch (e) { toast((e as Error).message, 'err') }
+    setBackupBusy(true)
+    try {
+      const st = await importAll(await f.text())
+      toast(`Importati: ${st.projects} progetti, ${st.tracks} brani, ${st.versions} versioni, ${st.texts} tra diagnosi/chat/note${st.audio ? `, ${st.audio} file audio` : ''}`)
+    } catch (e) { toast((e as Error).message, 'err') } finally { setBackupBusy(false) }
   }
 
   return (
@@ -78,10 +89,14 @@ export default function SettingsPage() {
 
       <section className="section">
         <div className="section-head"><span className="num">03</span><h2 className="display" style={{ fontSize: '1.2rem' }}>Backup</h2></div>
-        <p className="dim" style={{ marginTop: -6, fontSize: 13 }}>I progetti sono salvati nel browser di questo dispositivo. Esporta un backup ogni tanto: se cancelli i dati del browser, li perdi. Il backup contiene i progetti (concept, decisioni, reference, obiettivi) e i testi del Video Lab (concept, direzione, schede, sceneggiatura), non le chiavi API, né i file audio del Music Lab, né le immagini di moodboard e schede: tieni quei file anche altrove.</p>
+        <p className="dim" style={{ marginTop: -6, fontSize: 13 }}>Tutto è salvato nel browser di questo dispositivo: se cancelli i dati del browser lo perdi, e telefono e PC hanno archivi separati. Il backup contiene progetti, testi del Video Lab e tutto il Music Lab (brani, testi delle canzoni, versioni con le analisi, diagnosi, conversazioni Ableton, concept beat, reference). Non contiene le chiavi API né le immagini di moodboard e schede. I file audio solo se spunti l'opzione qui sotto.</p>
+        <label className="row" style={{ gap: 8, fontSize: 14, marginBottom: 12, cursor: 'pointer' }}>
+          <input type="checkbox" checked={includeAudio} onChange={(e) => setIncludeAudio(e.target.checked)} style={{ accentColor: 'var(--y)', width: 18, height: 18 }} />
+          Includi i file audio <span className="label">(file molto più grande: ~1,4 volte i tuoi audio. Meglio da PC)</span>
+        </label>
         <div className="row">
-          <button className="btn" onClick={doExport}>Esporta backup</button>
-          <button className="btn ghost" onClick={() => fileRef.current?.click()}>Importa backup</button>
+          <button className="btn" disabled={backupBusy} onClick={doExport}>{backupBusy ? <><div className="spinner" /> Attendi…</> : 'Esporta backup'}</button>
+          <button className="btn ghost" disabled={backupBusy} onClick={() => fileRef.current?.click()}>Importa backup</button>
           <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) doImport(f); e.target.value = '' }} />
         </div>
       </section>

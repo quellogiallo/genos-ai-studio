@@ -263,19 +263,83 @@ export async function setSetting(key: string, value: unknown) {
 }
 
 /** Esporta tutto in JSON (backup manuale). Non include file audio e immagini. */
-export async function exportAll() {
-  const projects = await db.projects.toArray()
-  const videos = await db.videos.toArray()
-  return JSON.stringify({ app: 'genos-ai-studio', version: 2, exportedAt: new Date().toISOString(), projects, videos }, null, 2)
+/* ---------------- backup ---------------- */
+
+const toB64 = (u8: Uint8Array) => {
+  let s = ''
+  for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000))
+  return btoa(s)
+}
+const fromB64 = (b: string) => Uint8Array.from(atob(b), (c) => c.charCodeAt(0))
+
+/** Versione senza oggetti binari: lo spettrogramma diventa testo base64. */
+function versionOut(v: TrackVersion) {
+  if (!v.analysis) return v
+  return { ...v, analysis: { ...v.analysis, spectrogram: { ...v.analysis.spectrogram, data: toB64(v.analysis.spectrogram.data) } } }
+}
+function versionIn(v: TrackVersion): TrackVersion {
+  const d = v.analysis?.spectrogram?.data as unknown
+  if (v.analysis && typeof d === 'string') return { ...v, analysis: { ...v.analysis, spectrogram: { ...v.analysis.spectrogram, data: fromB64(d) } } }
+  return v
 }
 
-/** Importa un backup: unisce progetti e video (sovrascrive quelli con lo stesso id). */
-export async function importAll(json: string): Promise<number> {
-  const data = JSON.parse(json)
+const blobToB64 = (b: Blob) => new Promise<string>((res, rej) => {
+  const r = new FileReader()
+  r.onload = () => res(String(r.result).split(',')[1] ?? '')
+  r.onerror = () => rej(new Error('Lettura di un file audio non riuscita.'))
+  r.readAsDataURL(b)
+})
+
+export interface BackupStats { projects: number; tracks: number; versions: number; audio: number; texts: number }
+
+/**
+ * Esporta tutto in JSON: progetti, Video Lab (testi), Music Lab (brani, testi, versioni con analisi,
+ * diagnosi, conversazioni Ableton, concept beat). I file audio solo se richiesto (file molto più grande).
+ * Restituisce un Blob costruito a pezzi, per non tenere in memoria un'unica stringa enorme.
+ */
+export async function exportAll(opts: { includeAudio?: boolean } = {}): Promise<Blob> {
+  const [projects, videos, tracks, versions, diagnoses, chats, aiNotes] = await Promise.all([
+    db.projects.toArray(), db.videos.toArray(), db.tracks.toArray(), db.versions.toArray(),
+    db.diagnoses.toArray(), db.chats.toArray(), db.aiNotes.toArray(),
+  ])
+  const head = { app: 'genos-ai-studio', version: 3, exportedAt: new Date().toISOString(), includesAudio: !!opts.includeAudio }
+  const parts: BlobPart[] = [JSON.stringify({ ...head, projects, videos, tracks, versions: versions.map(versionOut), diagnoses, chats, aiNotes }).slice(0, -1)]
+  if (opts.includeAudio) {
+    parts.push(',"audioFiles":[')
+    let first = true
+    for (const v of versions) {
+      const f = await db.audioFiles.get(v.id)
+      if (!f) continue
+      parts.push(`${first ? '' : ','}{"versionId":${JSON.stringify(v.id)},"mime":${JSON.stringify(f.blob.type || v.mime || 'audio/wav')},"data":"`, await blobToB64(f.blob), '"}')
+      first = false
+    }
+    parts.push(']')
+  }
+  parts.push('}')
+  return new Blob(parts, { type: 'application/json' })
+}
+
+/** Importa un backup (v1, v2 o v3): unisce i dati, sovrascrivendo quelli con lo stesso id. */
+export async function importAll(json: string): Promise<BackupStats> {
+  let data
+  try { data = JSON.parse(json) } catch { throw new Error('Il file non è leggibile: forse è incompleto o non è un backup.') }
   if (data?.app !== 'genos-ai-studio' || !Array.isArray(data.projects)) {
     throw new Error('Il file non è un backup valido di GENOS AI STUDIO.')
   }
-  await db.projects.bulkPut(data.projects as Project[])
-  if (Array.isArray(data.videos)) await db.videos.bulkPut(data.videos as VideoProject[])
-  return data.projects.length
+  const arr = <T,>(x: unknown) => (Array.isArray(x) ? (x as T[]) : [])
+  const stats: BackupStats = { projects: data.projects.length, tracks: 0, versions: 0, audio: 0, texts: 0 }
+  await db.transaction('rw', [db.projects, db.videos, db.tracks, db.versions, db.diagnoses, db.chats, db.aiNotes, db.audioFiles], async () => {
+    await db.projects.bulkPut(data.projects as Project[])
+    await db.videos.bulkPut(arr<VideoProject>(data.videos))
+    const tracks = arr<Track>(data.tracks); await db.tracks.bulkPut(tracks); stats.tracks = tracks.length
+    const versions = arr<TrackVersion>(data.versions).map(versionIn); await db.versions.bulkPut(versions); stats.versions = versions.length
+    const diag = arr<Diagnosis>(data.diagnoses), chats = arr<Chat>(data.chats), notes = arr<AiNote>(data.aiNotes)
+    await db.diagnoses.bulkPut(diag); await db.chats.bulkPut(chats); await db.aiNotes.bulkPut(notes)
+    stats.texts = diag.length + chats.length + notes.length
+    for (const a of arr<{ versionId: string; mime: string; data: string }>(data.audioFiles)) {
+      await db.audioFiles.put({ versionId: a.versionId, blob: new Blob([fromB64(a.data)], { type: a.mime }) })
+      stats.audio++
+    }
+  })
+  return stats
 }
