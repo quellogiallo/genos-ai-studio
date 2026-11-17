@@ -91,6 +91,7 @@ export default function TrackPage() {
     <div className="page">
       <div className="label"><Link to="/music">01 / Music Lab</Link> / Brano</div>
       <h1 className="display">{track.title}</h1>
+      {track.kind === 'reference' && <div className="row" style={{ marginTop: 8 }}><span className="tag solid">Reference</span>{track.artist && <span className="dim">{track.artist}</span>}{track.refFocus?.map((f) => <span key={f} className="tag y">{f}</span>)}<Link to="/music/references" className="label">← tutte le reference</Link></div>}
 
       {versions.length === 0 && <div className="row section"><Link to={`/music/${track.id}/lyrics`} className="btn ghost sm">Testo e metrica →</Link></div>}
 

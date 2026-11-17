@@ -58,6 +58,19 @@ Nella pagina del brano: **Confronta versioni A/B** (servono 2 versioni analizzat
   e differenza spettrale a parità di volume.
 - Valutazione AI del confronto (o Copia per Claude), salvata sulla versione B.
 
+## Music Lab (F4) — Strumenti
+
+- **Ableton Assistant** (`/music/assistant`): chat tecnica con istruzioni passo passo. Tiene conto di versione/edizione
+  di Live e dei plugin dichiarati; può collegare una versione di un brano (i suoi dati misurati entrano nel contesto).
+  Conversazioni salvate per progetto. Funziona anche in copia/incolla con Claude.
+- **Testo e metrica** (in ogni brano): editor con salvataggio automatico; sillabe stimate (italiano con sinalefi,
+  inglese approssimato), schema di rime, righe fuori metrica, densità sillabica rispetto al BPM del mix, parole e righe
+  ripetute, cliché da lista fissa. AI: analisi critica sui versi e brainstorming testo/melodia.
+- **Reference** (`/music/references`): brani di altri artisti analizzati con lo stesso motore, con focus dichiarati;
+  confronto A/B con i tuoi mix (prompt AI dedicato: capire le distanze, non copiare).
+- **Concept beat** (`/music/beats`): 3 concept con groove a 16 step ascoltabile nel browser, palette in Ableton,
+  arrangiamento, prompt per generatori musicali AI. Può usare i dati delle reference.
+
 Chiave Gemini gratuita: https://aistudio.google.com/apikey → Setup → Google (Gemini) → Salva e verifica.
 
 ## Come si usa

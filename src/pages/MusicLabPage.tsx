@@ -44,6 +44,8 @@ export default function MusicLabPage() {
         <>
           <div className="tools section">
             <Link to="/music/assistant" className="tool"><span className="label">Strumento</span><b>Ableton Assistant</b><span className="dim">Istruzioni operative su effetti, routing, synth</span></Link>
+            <Link to="/music/references" className="tool"><span className="label">Strumento</span><b>Reference</b><span className="dim">Brani di riferimento analizzati, confronto A/B col tuo mix</span></Link>
+            <Link to="/music/beats" className="tool"><span className="label">Strumento</span><b>Concept beat</b><span className="dim">3 idee con groove ascoltabile, palette Ableton, prompt AI</span></Link>
             <div className="tool static"><span className="label">In ogni brano</span><b>Testo e metrica</b><span className="dim">Sillabe, rime, cliché, analisi critica e brainstorming</span></div>
           </div>
           <p className="dim">Brani del progetto <b className="y">{activeProject.name}</b>. Ogni brano può avere più versioni (demo, mix, master) da analizzare e confrontare.</p>
@@ -79,12 +81,6 @@ export default function MusicLabPage() {
         </>
       )}
 
-      <section className="section">
-        <div className="section-head"><span className="num">//</span><h2 className="display" style={{ fontSize: '1.2rem' }}>Prossime fasi</h2></div>
-        {[
-          ['F4', 'Ableton Assistant, testi e metrica, concept beat, reference'],
-        ].map(([id, t]) => <div key={id} className="list-item"><span className="tag">{id}</span><div className="grow dim">{t}</div></div>)}
-      </section>
     </div>
   )
 }

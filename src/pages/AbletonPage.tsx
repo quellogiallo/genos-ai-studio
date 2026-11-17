@@ -191,7 +191,7 @@ export function AbletonChat() {
         {chat.messages.length === 0 && (
           <div>
             <p className="dim">Chiedi qualsiasi cosa su Ableton. Alcuni esempi:</p>
-            <div className="chips">{QUICK_PROMPTS.map((q) => <button key={q} className="chip" onClick={() => send(q)}>{q}</button>)}</div>
+            <div className="pills">{QUICK_PROMPTS.map((q) => <button key={q} className="chip" onClick={() => send(q)}>{q}</button>)}</div>
           </div>
         )}
         {chat.messages.map((m, i) => (

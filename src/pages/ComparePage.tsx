@@ -13,15 +13,25 @@ export default function ComparePage() {
   const [params, setParams] = useSearchParams()
   const track = useLiveQuery(() => (trackId ? db.tracks.get(trackId) : undefined), [trackId])
   const versions = useLiveQuery(() => (trackId ? db.versions.where('trackId').equals(trackId).sortBy('createdAt') : []), [trackId])
+  // reference del progetto (brani di altri artisti) confrontabili come B
+  const refs = useLiveQuery(async () => {
+    if (!track) return []
+    const ts = (await db.tracks.where('projectId').equals(track.projectId).toArray()).filter((t) => t.kind === 'reference')
+    const out: { v: TrackVersion; t: Track }[] = []
+    for (const t of ts) (await db.versions.where('trackId').equals(t.id).toArray()).filter((v) => v.analysis).forEach((v) => out.push({ v, t }))
+    return out
+  }, [track?.projectId])
 
   if (track === undefined || versions === undefined) return <div className="page"><div className="row dim"><div className="spinner" /> Caricamento…</div></div>
   if (!track) return <div className="page"><div className="notice err">Brano non trovato.</div></div>
 
   const analyzed = versions.filter((v) => v.analysis)
-  const aId = params.get('a') ?? analyzed[analyzed.length - 2]?.id
-  const bId = params.get('b') ?? analyzed[analyzed.length - 1]?.id
+  const refList = refs ?? []
+  const aId = params.get('a') ?? (analyzed.length >= 2 ? analyzed[analyzed.length - 2]?.id : analyzed[0]?.id)
+  const bId = params.get('b') ?? (analyzed.length >= 2 ? analyzed[analyzed.length - 1]?.id : refList[0]?.v.id)
   const A = analyzed.find((v) => v.id === aId)
-  const B = analyzed.find((v) => v.id === bId)
+  const refB = refList.find((r) => r.v.id === bId)
+  const B = analyzed.find((v) => v.id === bId) ?? refB?.v
   const pick = (k: 'a' | 'b', id: string) => setParams({ a: k === 'a' ? id : aId ?? '', b: k === 'b' ? id : bId ?? '' })
 
   return (
@@ -29,8 +39,8 @@ export default function ComparePage() {
       <div className="label"><Link to="/music">01 / Music Lab</Link> / <Link to={`/music/${track.id}`}>{track.title}</Link> / Confronto</div>
       <h1 className="display">Confronto</h1>
 
-      {analyzed.length < 2 ? (
-        <div className="notice section">Servono almeno due versioni analizzate di questo brano. <Link to={`/music/${track.id}`} className="y">Carica un'altra versione →</Link></div>
+      {analyzed.length < 1 || analyzed.length + refList.length < 2 ? (
+        <div className="notice section">Servono due versioni analizzate di questo brano, oppure una versione e una reference. <Link to={`/music/${track.id}`} className="y">Carica una versione →</Link> · <Link to="/music/references" className="y">Aggiungi una reference →</Link></div>
       ) : (
         <>
           <div className="ab-pick section">
@@ -38,26 +48,34 @@ export default function ComparePage() {
               <label key={k} className={`ab-slot ${k}`}>
                 <span className="ab-letter">{k.toUpperCase()}</span>
                 <select className="select" value={k === 'a' ? aId : bId} onChange={(e) => pick(k, e.target.value)}>
-                  {analyzed.map((v) => <option key={v.id} value={v.id}>{v.label} · {new Date(v.createdAt).toLocaleDateString('it-IT')}</option>)}
+                  <optgroup label="Versioni di questo brano">
+                    {analyzed.map((v) => <option key={v.id} value={v.id}>{v.label} · {new Date(v.createdAt).toLocaleDateString('it-IT')}</option>)}
+                  </optgroup>
+                  {k === 'b' && refList.length > 0 && (
+                    <optgroup label="Reference">
+                      {refList.map(({ v, t }) => <option key={v.id} value={v.id}>{t.artist ? `${t.artist} — ` : ''}{t.title}</option>)}
+                    </optgroup>
+                  )}
                 </select>
               </label>
             ))}
           </div>
           {A && B && (A.id === B.id
             ? <div className="notice section">Scegli due versioni diverse.</div>
-            : <CompareView key={`${A.id}-${B.id}`} A={A} B={B} track={track} />)}
+            : <CompareView key={`${A.id}-${B.id}`} A={A} B={B} track={track} reference={refB?.t} />)}
         </>
       )}
     </div>
   )
 }
 
-function CompareView({ A, B, track }: { A: TrackVersion; B: TrackVersion; track: Track }) {
+function CompareView({ A, B, track, reference }: { A: TrackVersion; B: TrackVersion; track: Track; reference?: Track }) {
   const projectId = track.projectId
   const a = A.analysis!, b = B.analysis!
   const [auto, setAuto] = useState<{ offset: number; confidence: number } | null>(null)
   const [offset, setOffset] = useState(0)
   useEffect(() => {
+    if (reference) { setAuto({ offset: 0, confidence: 0 }); return }
     let alive = true
     Promise.all([db.audioFiles.get(A.id), db.audioFiles.get(B.id)])
       .then(([fa, fb]) => (fa && fb ? estimateOffset(fa.blob, fb.blob) : null))
@@ -73,15 +91,18 @@ function CompareView({ A, B, track }: { A: TrackVersion; B: TrackVersion; track:
   const [project, setProject] = useState<Project>()
   const [note, setNote] = useState('')
   useEffect(() => { db.projects.get(projectId).then(setProject) }, [projectId])
-  const history = useLiveQuery(async () => (await db.diagnoses.where('versionId').equals(B.id).reverse().sortBy('createdAt')).filter((d) => d.kind === 'confronto'), [B.id])
+  // il confronto si salva sulla versione B; con una reference si salva sulla tua versione A
+  const target = reference ? A.id : B.id
+  const history = useLiveQuery(async () => (await db.diagnoses.where('versionId').equals(target).reverse().sortBy('createdAt')).filter((d) => d.kind === 'confronto'), [target])
 
   const groups = [...new Set(rows.map((r) => r.group))]
 
   return (
     <>
-      <ABPlayer A={A} B={B} offset={offset} lufsA={a.integratedLufs} lufsB={b.integratedLufs} onTime={setTime} seekRef={seekRef} />
+      <ABPlayer A={A} B={reference ? { ...B, label: reference.title } : B} offset={offset} lufsA={a.integratedLufs} lufsB={b.integratedLufs} onTime={setTime} seekRef={seekRef} />
 
-      <div className="row" style={{ marginTop: 10, gap: 8 }}>
+      {reference && <div className="notice" style={{ marginTop: 10, fontSize: 13 }}>B è una <b>reference</b>{reference.refFocus?.length ? ` (focus: ${reference.refFocus.join(', ')})` : ''}. Confronta soprattutto bilanciamento tonale e stereo: se A non è ancora masterizzato, volume e dinamica saranno diversi per natura.</div>}
+      {!reference && <div className="row" style={{ marginTop: 10, gap: 8 }}>
         <span className="label">Allineamento B: {offset >= 0 ? '+' : ''}{offset.toFixed(2)} s</span>
         <button className="btn ghost sm" onClick={() => setOffset((o) => Math.round((o - 0.01) * 100) / 100)}>−10 ms</button>
         <button className="btn ghost sm" onClick={() => setOffset((o) => Math.round((o + 0.01) * 100) / 100)}>+10 ms</button>
@@ -89,13 +110,13 @@ function CompareView({ A, B, track }: { A: TrackVersion; B: TrackVersion; track:
           <button className="btn ghost sm" onClick={() => setOffset(auto.offset)}>Auto ({auto.offset >= 0 ? '+' : ''}{auto.offset.toFixed(2)} s)</button>
           <span className="label">{auto.confidence > 0.4 ? 'allineamento automatico affidabile' : 'allineamento automatico incerto: controlla a orecchio'}</span>
         </> : <span className="label row" style={{ gap: 6 }}><span className="spinner" /> calcolo dell'allineamento…</span>}
-      </div>
+      </div>}
 
       {/* ---------- loudness nel tempo ---------- */}
       <section className="section">
         <div className="section-head"><span className="num">01</span><h2 className="display" style={{ fontSize: '1.2rem' }}>Loudness nel tempo</h2></div>
         <div className="chart-wrap">
-          <div className="chart-legend"><span className="lg y">A · {A.label}</span><span className="lg">B · {B.label} (tratteggio)</span><span className="lg mute">short-term LUFS</span></div>
+          <div className="chart-legend"><span className="lg y">A · {A.label}</span><span className="lg">B · {reference ? reference.title : B.label} (tratteggio)</span><span className="lg mute">short-term LUFS</span></div>
           <LoudnessOverlay a={a} b={b} offset={offset} time={time} onSeek={(t) => seekRef.current(t)} />
         </div>
       </section>
@@ -149,10 +170,10 @@ function CompareView({ A, B, track }: { A: TrackVersion; B: TrackVersion; track:
           <AiRunner
             label="Confronta con AI"
             disabledReason={project ? undefined : 'Caricamento del progetto…'}
-            build={() => ({ task: 'critical', maxTokens: 8192, json: false, ...buildComparePrompt({ project, track, a: A, b: B, offset, userNote: note }) })}
+            build={() => ({ task: 'critical', maxTokens: 8192, json: false, ...buildComparePrompt({ project, track, a: A, b: B, offset, userNote: note, reference }) })}
             onResult={async (text) => {
               if (!text.trim()) throw new Error('Risposta vuota.')
-              await db.diagnoses.add({ id: uid(), versionId: B.id, kind: 'confronto', source: 'auto', userNote: `${A.label} → ${B.label}${note.trim() ? ` · ${note.trim()}` : ''}`, markdown: text.trim(), createdAt: Date.now() })
+              await db.diagnoses.add({ id: uid(), versionId: target, kind: 'confronto', source: 'auto', userNote: `${A.label} → ${reference ? `reference "${reference.title}"` : B.label}${note.trim() ? ` · ${note.trim()}` : ''}`, markdown: text.trim(), createdAt: Date.now() })
             }}
           />
         </div>

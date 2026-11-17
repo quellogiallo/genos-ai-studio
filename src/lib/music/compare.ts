@@ -144,7 +144,36 @@ Da 2 a 4 interventi concreti per la prossima versione, in ordine di priorità, o
 ## Domande
 Solo se servono davvero (massimo 3).`
 
-export function buildComparePrompt(p: { project?: Project; track: Track; a: TrackVersion; b: TrackVersion; offset: number; userNote: string }) {
+const REFERENCE_SYSTEM = `Sei GENOS AI BRAIN, direttore creativo e tecnico personale di Genos, musicista che produce in Ableton Live. Ora CONFRONTI il mix di Genos (A) con una REFERENCE (B): un brano di un altro artista scelto come riferimento per alcuni aspetti precisi.
+
+REGOLE
+1. Usa SOLO i dati misurati forniti. Non hai ascoltato i brani: scrivi "i dati indicano".
+2. Lo scopo NON è copiare la reference: è capire su quali aspetti dichiarati (focus) il mix di A si discosta e se quella distanza è voluta. Concentrati sui focus indicati; gli altri aspetti citali solo se la differenza è grande.
+3. Cita sempre i valori A e B. Ricorda che la reference è un master finito: se A è un mix non masterizzato, loudness e dinamica saranno diverse per natura: confronta il bilanciamento tonale e lo stereo, non il volume.
+4. Rispetta l'identità di Genos, le decisioni del progetto e le idee scartate. Se avvicinarsi alla reference andrebbe contro una decisione del progetto, segnalalo.
+5. Interventi pratici in Ableton (dispositivi nativi), valori indicativi da verificare a orecchio.
+6. Critico, diretto, italiano comprensibile.
+
+FORMATO (markdown)
+## Verdetto
+## Dove A si avvicina alla reference
+## Dove A si discosta (con valori A → B)
+Per ogni punto: **Diagnosi**, **È un problema?** (dipende dall'intenzione), **Intervento consigliato**, **Alternative creative**
+## Cosa NON prendere dalla reference
+## Domande`
+
+export function buildComparePrompt(p: { project?: Project; track: Track; a: TrackVersion; b: TrackVersion; offset: number; userNote: string; reference?: Track }) {
+  if (p.reference) {
+    const r = p.reference
+    const user = [
+      p.project ? `CONTESTO DEL PROGETTO\n${buildProjectContext(p.project)}` : 'CONTESTO DEL PROGETTO: nessuno.',
+      p.userNote.trim() ? `RICHIESTA SPECIFICA DELL'ARTISTA: ${p.userNote.trim()}` : 'RICHIESTA SPECIFICA: nessuna.',
+      `===== A: MIX DI GENOS — "${p.track.title}", versione "${p.a.label}" =====${p.a.notes ? `\nNote: ${p.a.notes}` : ''}\n${analysisToText(p.a.analysis!)}`,
+      `===== B: REFERENCE — "${r.title}"${r.artist ? ` di ${r.artist}` : ''} =====\nAspetti da prendere come riferimento (focus): ${r.refFocus?.length ? r.refFocus.join(', ') : 'non specificati'}${r.notes ? `\nPerché è una reference: ${r.notes}` : ''}\n${analysisToText(p.b.analysis!)}`,
+      'Confronta seguendo esattamente il formato richiesto.',
+    ]
+    return { system: REFERENCE_SYSTEM, user: user.join('\n\n') }
+  }
   const user = [
     p.project ? `CONTESTO DEL PROGETTO\n${buildProjectContext(p.project)}` : 'CONTESTO DEL PROGETTO: nessuno.',
     `BRANO: "${p.track.title}"`,
