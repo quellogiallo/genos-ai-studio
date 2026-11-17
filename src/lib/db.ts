@@ -1,4 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
+import dexieCloud from 'dexie-cloud-addon'
+import { CLOUD_DB_URL, LOCAL_ONLY_TABLES } from './cloudConfig'
 import type { AudioAnalysis } from './audio/types'
 import type { VideoImage, VideoProject } from './video/types'
 
@@ -140,7 +142,10 @@ export interface Diagnosis {
   createdAt: number
 }
 
-export const db = new Dexie('genos-ai-studio') as Dexie & {
+/** true se la sincronizzazione cloud è configurata (vedi cloudConfig.ts) */
+export const CLOUD_ENABLED = !!CLOUD_DB_URL
+
+export const db = new Dexie('genos-ai-studio', CLOUD_ENABLED ? { addons: [dexieCloud] } : undefined) as Dexie & {
   projects: EntityTable<Project, 'id'>
   settings: EntityTable<SettingRow, 'key'>
   tracks: EntityTable<Track, 'id'>
@@ -206,6 +211,17 @@ export async function deleteVideo(videoId: string) {
   await db.transaction('rw', db.videos, db.videoImages, async () => {
     await db.videoImages.where('videoId').equals(videoId).delete()
     await db.videos.delete(videoId)
+  })
+}
+
+
+// Sincronizzazione cloud: va configurata prima che il database venga aperto.
+if (CLOUD_ENABLED) {
+  db.cloud.configure({
+    databaseUrl: CLOUD_DB_URL,
+    requireAuth: false, // l'app funziona anche senza login; il login attiva la sincronizzazione
+    customLoginGui: true, // finestra di accesso disegnata dall'app (components/CloudLogin.tsx)
+    unsyncedTables: LOCAL_ONLY_TABLES,
   })
 }
 

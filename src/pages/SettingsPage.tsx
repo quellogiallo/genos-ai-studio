@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { getSetting, setSetting, exportAll, importAll } from '../lib/db'
 import { PROVIDER_IDS, TASKS, getRouting, providers, runTask, type ModelInfo, type ProviderId, type TaskId, type TaskRouting } from '../lib/ai'
 import { useApp } from '../components/AppState'
+import { CloudPanel } from '../components/CloudStatus'
 
 const PROVIDER_NOTES: Record<ProviderId, React.ReactNode> = {
   google: <>
@@ -67,6 +68,11 @@ export default function SettingsPage() {
     <div className="page">
       <div className="label">// Impostazioni</div>
       <h1 className="display">Setup</h1>
+
+      <section className="section">
+        <div className="section-head"><span className="num">00</span><h2 className="display" style={{ fontSize: '1.2rem' }}>Sincronizzazione</h2></div>
+        <CloudPanel />
+      </section>
 
       <section className="section">
         <div className="section-head"><span className="num">01</span><h2 className="display" style={{ fontSize: '1.2rem' }}>Chiavi AI</h2></div>

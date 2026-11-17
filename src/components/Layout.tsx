@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useApp } from './AppState'
+import { CloudBadge } from './CloudStatus'
 
 export const MODULES = [
   { to: '/projects', idx: '00', label: 'Progetti', short: 'Prog', glyph: 'P', ready: true },
@@ -46,6 +47,8 @@ export default function Layout() {
           ) : (
             <Link to="/projects" className="tag" style={{ textDecoration: 'none' }}>Nessuno</Link>
           )}
+                  <div className="spacer" />
+          <CloudBadge />
         </header>
         <Outlet />
       </main>

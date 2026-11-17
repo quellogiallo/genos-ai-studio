@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, getSetting, setSetting, type Project } from '../lib/db'
+import { migrateLegacyData } from '../lib/cloud'
+import CloudLogin from './CloudLogin'
 
 interface Toast { id: number; text: string; kind: 'ok' | 'err' }
 
@@ -17,7 +19,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
   useEffect(() => {
-    getSetting<string | null>('activeProjectId', null).then(setActiveId)
+    // con la sincronizzazione attiva, copia una volta i dati locali precedenti nel nuovo database
+    migrateLegacyData()
+      .then((n) => { if (n) toast(`${n} elementi di questo dispositivo pronti per la sincronizzazione`) })
+      .catch((e) => toast(`Copia dei dati locali non riuscita: ${(e as Error).message}`, 'err'))
+      .finally(() => getSetting<string | null>('activeProjectId', null).then(setActiveId))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const activeProject = useLiveQuery(
@@ -39,6 +46,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{ activeProject, setActiveProjectId, toast }}>
       {children}
+      <CloudLogin />
       <div className="toast-wrap" role="status" aria-live="polite">
         {toasts.map((t) => (
           <div key={t.id} className={`toast ${t.kind === 'err' ? 'err' : ''}`}>{t.text}</div>
