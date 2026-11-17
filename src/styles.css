@@ -639,3 +639,37 @@ button.tag.solid:hover { color: #000; }
 .swatch-btn.on { outline: 2px solid var(--y); outline-offset: 2px; }
 .swatch-btn.custom::after { content: '+'; position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; color: #fff; mix-blend-mode: difference; pointer-events: none; }
 .step .ok { color: var(--green); margin-left: 4px; }
+
+/* ===================== Project Manager ===================== */
+.nav a.sub { padding-top: 6px; padding-bottom: 6px; font-size: 11px; color: var(--fg-mute); }
+.nav a.sub.active { color: #000; }
+.topbar-search { font-size: 20px; line-height: 1; text-decoration: none; color: var(--fg); padding: 4px 10px; border: 1px solid var(--line-2); }
+.topbar-search:hover { border-color: var(--y); color: var(--y); }
+.pm-tabs { display: flex; border-bottom: 2px solid var(--fg); margin-top: 18px; }
+.pm-tabs a { flex: 0 1 auto; padding: 10px 16px; text-decoration: none; font-weight: 800; font-stretch: 110%; text-transform: uppercase; font-size: 12px; letter-spacing: 0.06em; color: var(--fg-dim); }
+.pm-tabs a.active { background: var(--fg); color: #000; }
+.pm-steps { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-family: var(--mono); font-size: 10px; color: var(--fg-mute); text-transform: uppercase; }
+.pm-steps .on { color: var(--y); }
+.pm-link { background: none; border: 0; padding: 0; color: var(--fg); font: inherit; font-weight: 700; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.pm-link:hover { color: var(--y); text-decoration-color: var(--y); }
+.pm-ev { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.pm-row { display: flex; gap: 14px; align-items: center; padding: 12px 12px; border-left: 4px solid var(--y); border-bottom: 1px solid var(--line); background: var(--bg-2); margin-bottom: 4px; animation: pm-in 0.25s var(--ease) both; }
+.pm-row.done { opacity: 0.45; }
+.pm-row.done .pm-link { text-decoration: line-through; }
+.pm-row .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pm-row-date { display: flex; flex-direction: column; width: 92px; flex: 0 0 auto; font-family: var(--mono); font-size: 12px; text-transform: uppercase; }
+.pm-week { border-bottom: 2px solid var(--fg); padding-bottom: 6px; margin-bottom: 8px; color: var(--fg); }
+.pm-clash { font-family: var(--mono); font-size: 11px; text-transform: uppercase; color: #000; background: var(--y); padding: 6px 10px; margin: 6px 0 4px; }
+.pm-search { font-size: 18px; padding: 16px; border-width: 2px; }
+.pm-hit { display: block; width: 100%; text-align: left; background: transparent; color: var(--fg); border: 0; border-bottom: 1px solid var(--line); padding: 14px 0; cursor: pointer; font: inherit; }
+.pm-hit:hover { background: var(--bg-2); }
+.pm-snip { margin-top: 6px; font-size: 14px; color: var(--fg-dim); overflow-wrap: anywhere; }
+.pm-snip mark { background: var(--y); color: #000; padding: 0 2px; }
+@keyframes pm-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pm-row { animation: none; } }
+@media (max-width: 760px) {
+  .pm-row { gap: 10px; padding: 10px; }
+  .pm-row-date { width: 70px; font-size: 11px; }
+  .pm-tabs a { flex: 1; text-align: center; padding: 10px 6px; }
+}
+@media (max-width: 760px) { .topbar > span.label { display: none; } .topbar-search { padding: 4px 8px; } }

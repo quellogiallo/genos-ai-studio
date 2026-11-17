@@ -39,6 +39,16 @@ export interface Reference {
   createdAt: number
 }
 
+/** Nota o idea veloce del progetto (#tag nel testo). */
+export interface QuickNote {
+  id: string
+  text: string
+  tags: string[]
+  pinned?: boolean
+  createdAt: number
+  updatedAt: number
+}
+
 export interface Goal {
   id: string
   text: string
@@ -56,6 +66,8 @@ export interface Project {
   discarded: DiscardedIdea[]
   references: Reference[]
   goals: Goal[]
+  /** Project Manager: note e idee veloci */
+  notes?: QuickNote[]
   createdAt: number
   updatedAt: number
 }
@@ -101,7 +113,7 @@ export interface AiNote {
   id: string
   scope: 'track' | 'project'
   refId: string
-  kind: 'testo-analisi' | 'testo-brainstorming' | 'beat' | 'contenuti-analisi' | 'moodboard-critica'
+  kind: 'testo-analisi' | 'testo-brainstorming' | 'beat' | 'contenuti-analisi' | 'moodboard-critica' | 'progetto-revisione'
   userNote: string
   markdown: string
   /** dati strutturati (es. concept beat in JSON) */

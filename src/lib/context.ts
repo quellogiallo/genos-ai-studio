@@ -25,5 +25,10 @@ export function buildProjectContext(p: Project): string {
     lines.push('OBIETTIVI:')
     p.goals.forEach((g) => lines.push(`- ${g.done ? '[fatto] ' : ''}${g.text}${g.deadline ? ` (entro ${g.deadline})` : ''}`))
   }
+  const pinned = (p.notes ?? []).filter((n) => n.pinned).slice(0, 8)
+  if (pinned.length) {
+    lines.push('NOTE FISSATE DALL\'ARTISTA (idee aperte, NON vincoli):')
+    pinned.forEach((n) => lines.push(`- ${n.text.replace(/\n+/g, ' / ').slice(0, 240)}`))
+  }
   return lines.join('\n')
 }

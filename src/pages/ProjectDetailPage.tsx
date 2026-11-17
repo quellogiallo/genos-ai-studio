@@ -4,6 +4,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, deleteTrack, deleteVideo, saveProject, uid, type Decision, type Project, type ProjectStatus, type ProjectType } from '../lib/db'
 import { useApp } from '../components/AppState'
 import { TYPE_LABEL } from './ProjectsPage'
+import { NotesPanel, OverviewPanel, ReviewPanel } from '../components/pm/ProjectHub'
+import { artKey } from '../lib/art/utils'
 
 const STATUSES: ProjectStatus[] = ['idea', 'progettazione', 'produzione', 'pubblicato', 'archiviato']
 const AREAS: Decision['area'][] = ['generale', 'musica', 'video', 'contenuti', 'art']
@@ -30,11 +32,18 @@ export default function ProjectDetailPage() {
   }
 
   const remove = async () => {
-    if (!confirm(`Eliminare definitivamente "${project.name}" con tutti i brani, i file audio e i video?`)) return
+    if (!confirm(`Eliminare definitivamente "${project.name}" con brani, file audio, video, campagne e identità visiva?`)) return
     const tracks = await db.tracks.where('projectId').equals(project.id).primaryKeys()
     for (const t of tracks) await deleteTrack(t)
     const videos = await db.videos.where('projectId').equals(project.id).primaryKeys()
     for (const v of videos) await deleteVideo(v)
+    const kits = await db.artkits.where('projectId').equals(project.id).primaryKeys()
+    for (const k of kits) { await db.videoImages.where('videoId').equals(artKey(k)).delete(); await db.aiNotes.where('refId').equals(k).delete() }
+    await db.artkits.bulkDelete(kits)
+    const camps = await db.campaigns.where('projectId').equals(project.id).primaryKeys()
+    await db.aiNotes.where('refId').anyOf([...camps, project.id]).delete()
+    await db.campaigns.bulkDelete(camps)
+    await db.chats.where('projectId').equals(project.id).delete()
     await db.projects.delete(project.id)
     if (activeProject?.id === project.id) setActiveProjectId(null)
     toast('Progetto eliminato')
@@ -61,11 +70,19 @@ export default function ProjectDetailPage() {
           : <button className="btn primary sm" onClick={() => { setActiveProjectId(project.id); toast('Progetto attivo impostato') }}>Rendi attivo</button>}
       </div>
 
-      <Section num="01" title="Concept">
+      <Section num="01" title="Panoramica" hint="Stato di ogni modulo calcolato dall'app, non dall'AI.">
+        <OverviewPanel project={project} />
+      </Section>
+
+      <Section num="02" title="Concept">
         <DescriptionEditor key={project.id} value={project.description} onSave={(description) => update({ description })} />
       </Section>
 
-      <Section num="02" title="Decisioni creative" hint="L'AI le tratterà come vincoli fissi del progetto.">
+      <Section num="03" title="Note e idee veloci" hint="Appunti al volo con #tag. Quando un'idea è decisa, trasformala in decisione.">
+        <NotesPanel project={project} />
+      </Section>
+
+      <Section num="04" title="Decisioni creative" hint="L'AI le tratterà come vincoli fissi del progetto.">
         <AddRow
           placeholder="es. Voce sempre filtrata, mai pulita"
           extra={(v, set) => (
@@ -85,7 +102,7 @@ export default function ProjectDetailPage() {
         ))}
       </Section>
 
-      <Section num="03" title="Idee scartate" hint="L'AI non le riproporrà.">
+      <Section num="05" title="Idee scartate" hint="L'AI non le riproporrà.">
         <AddRow
           placeholder="Idea scartata"
           extra={(v, set) => <input className="input" style={{ flex: '1 1 160px' }} placeholder="Motivo (opzionale)" value={v} onChange={(e) => set(e.target.value)} />}
@@ -100,7 +117,7 @@ export default function ProjectDetailPage() {
         ))}
       </Section>
 
-      <Section num="04" title="Reference">
+      <Section num="06" title="Reference">
         <AddRow
           placeholder="Titolo (es. Arca — Nonbinary)"
           extra={(v, set) => <input className="input" style={{ flex: '1 1 160px' }} placeholder="Link o nota" value={v} onChange={(e) => set(e.target.value)} />}
@@ -121,7 +138,7 @@ export default function ProjectDetailPage() {
         ))}
       </Section>
 
-      <Section num="05" title="Obiettivi e scadenze">
+      <Section num="07" title="Obiettivi e scadenze">
         <AddRow
           placeholder="es. Mix finale pronto"
           extra={(v, set) => <input type="date" className="input" style={{ width: 'auto' }} value={v} onChange={(e) => set(e.target.value)} />}
@@ -142,6 +159,10 @@ export default function ProjectDetailPage() {
             </div>
           )
         })}
+      </Section>
+
+      <Section num="08" title="Revisione AI del progetto" hint="Su richiesta: critica dell'intero progetto, incoerenze tra moduli e prossimi passi.">
+        <ReviewPanel project={project} />
       </Section>
 
       <div className="section row">

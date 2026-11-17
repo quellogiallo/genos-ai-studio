@@ -98,6 +98,15 @@ locandina, merch) · A4 Compositore (5 layout, tua immagine, testi, grana, sfond
 controlli di contrasto/risoluzione/zone sicure, export PNG alla risoluzione del formato). Nessun generatore
 di immagini AI: solo tue immagini, render e tipografia.
 
+## Project Manager
+
+Scheda di ogni progetto: **Panoramica** (stato di ogni modulo calcolato dall'app, prossime scadenze), concept,
+**note e idee veloci** con #tag (fissabili in alto, trasformabili in decisione o idea scartata; quelle fissate entrano
+nel contesto dell'AI come idee aperte), decisioni, scartate, reference, obiettivi e **revisione AI del progetto**
+(incoerenze tra musica/video/contenuti/identità, cosa manca, rischi sulle date, prossimi passi).
+**Timeline** unica di tutti i progetti (obiettivi, uscite, post del calendario; ritardi, giorni sovraccarichi, export
+.ics con promemoria). **Cerca** in tutto ciò che è salvato (anche testi, scene, idee, risultati AI), senza AI.
+
 ## Sincronizzazione (Dexie Cloud)
 
 Attiva quando `src/lib/cloudConfig.ts` contiene l'URL del database (creato con il workflow

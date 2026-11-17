@@ -1,11 +1,22 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, newProject, saveProject, type ProjectType } from '../lib/db'
 import { useApp } from '../components/AppState'
 
 export const TYPE_LABEL: Record<ProjectType, string> = {
   singolo: 'Singolo', ep: 'EP', album: 'Album', videoclip: 'Videoclip', campagna: 'Campagna', altro: 'Altro',
+}
+
+/** Schede del Project Manager: progetti, timeline unica, ricerca. */
+export function PmTabs() {
+  return (
+    <nav className="pm-tabs" aria-label="Project manager">
+      <NavLink to="/projects" end>Progetti</NavLink>
+      <NavLink to="/timeline">Timeline</NavLink>
+      <NavLink to="/search">Cerca</NavLink>
+    </nav>
+  )
 }
 
 export default function ProjectsPage() {
@@ -38,6 +49,7 @@ export default function ProjectsPage() {
     <div className="page">
       <div className="label">00 / Project manager</div>
       <h1 className="display">Progetti</h1>
+      <PmTabs />
 
       <form className="card section" onSubmit={create}>
         <div className="label" style={{ marginBottom: 12 }}>Nuovo progetto</div>
@@ -68,13 +80,28 @@ export default function ProjectsPage() {
                 <h2 className="display" style={{ marginTop: 14 }}>{p.name}</h2>
                 {p.description && <p className="dim" style={{ margin: '8px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.description}</p>}
                 <div className="label" style={{ marginTop: 14 }}>
-                  {p.decisions.length} decisioni · {p.discarded.length} scartate · {p.references.length} reference
+                  {p.decisions.length} decisioni · {p.discarded.length} scartate · {(p.notes ?? []).length} note
                 </div>
+                <NextDeadline goals={p.goals} />
               </Link>
             ))}
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function NextDeadline({ goals }: { goals: { deadline?: string; done: boolean; text: string }[] }) {
+  const t = new Date().toISOString().slice(0, 10)
+  const open = goals.filter((g) => !g.done && g.deadline).sort((a, b) => a.deadline!.localeCompare(b.deadline!))
+  const late = open.filter((g) => g.deadline! < t).length
+  const next = open.find((g) => g.deadline! >= t)
+  if (!late && !next) return null
+  return (
+    <div className="label" style={{ marginTop: 6 }}>
+      {late > 0 && <span style={{ color: 'var(--red)' }}>{late} obiettivi scaduti{next ? ' · ' : ''}</span>}
+      {next && <span className="y">Prossimo: {next.text} ({next.deadline})</span>}
     </div>
   )
 }

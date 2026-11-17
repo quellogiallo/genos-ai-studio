@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useApp } from './AppState'
 import { CloudBadge } from './CloudStatus'
 
@@ -12,6 +12,7 @@ export const MODULES = [
 
 export default function Layout() {
   const { activeProject } = useApp()
+  const { pathname } = useLocation()
 
   return (
     <div className="shell">
@@ -22,11 +23,19 @@ export default function Layout() {
         </Link>
         <nav className="nav">
           {MODULES.map((m) => (
-            <NavLink key={m.to} to={m.to}>
-              <span className="idx">{m.idx}</span>
-              {m.label}
-              {!m.ready && <span className="soon">SOON</span>}
-            </NavLink>
+            <div key={m.to} style={{ display: 'contents' }}>
+              <NavLink to={m.to}>
+                <span className="idx">{m.idx}</span>
+                {m.label}
+                {!m.ready && <span className="soon">SOON</span>}
+              </NavLink>
+              {m.to === '/projects' && (
+                <>
+                  <NavLink to="/timeline" className="sub"><span className="idx">↳</span>Timeline</NavLink>
+                  <NavLink to="/search" className="sub"><span className="idx">↳</span>Cerca</NavLink>
+                </>
+              )}
+            </div>
           ))}
           <div className="spacer" />
           <NavLink to="/settings">
@@ -48,6 +57,7 @@ export default function Layout() {
             <Link to="/projects" className="tag" style={{ textDecoration: 'none' }}>Nessuno</Link>
           )}
                   <div className="spacer" />
+          <Link to="/search" className="topbar-search" aria-label="Cerca in tutti i progetti" title="Cerca">⌕</Link>
           <CloudBadge />
         </header>
         <Outlet />
@@ -55,7 +65,8 @@ export default function Layout() {
 
       <nav className="bottom-nav" aria-label="Navigazione">
         {MODULES.map((m) => (
-          <NavLink key={m.to} to={m.to}>
+          <NavLink key={m.to} to={m.to}
+            className={({ isActive }) => (isActive || (m.to === '/projects' && /^\/(timeline|search)/.test(pathname)) ? 'active' : '')}>
             <span className="glyph">{m.glyph}</span>{m.short}
           </NavLink>
         ))}

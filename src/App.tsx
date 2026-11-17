@@ -3,6 +3,8 @@ import { AppStateProvider } from './components/AppState'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import ProjectsPage from './pages/ProjectsPage'
+import TimelinePage from './pages/TimelinePage'
+import SearchPage from './pages/SearchPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import SettingsPage from './pages/SettingsPage'
 import MusicLabPage from './pages/MusicLabPage'
@@ -34,6 +36,8 @@ export default function App() {
             <Route index element={<HomePage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="projects/:id" element={<ProjectDetailPage />} />
+            <Route path="timeline" element={<TimelinePage />} />
+            <Route path="search" element={<SearchPage />} />
             <Route path="music" element={<MusicLabPage />} />
             <Route path="music/:trackId" element={<TrackPage />} />
             <Route path="music/:trackId/compare" element={<ComparePage />} />
