@@ -79,6 +79,15 @@ Workflow a 12 passi per ogni video: 01 Concept · 02 Direzione artistica · 03 M
 10 Montaggio (timeline sul brano, aggancio ai battiti, piano dei tagli) · 11 Color grading · 12 Export
 (libro di produzione stampabile/PDF e checklist da telefono con spunte salvate).
 
+## Content Lab (C1–C4)
+
+Una **campagna** per ogni uscita (data, brano del Music Lab, video del Video Lab, piattaforme, ritmo settimanale,
+formati accettati). C1 Strategia (obiettivo, pubblico, pilastri, fasi in giorni rispetto all'uscita) · C2 Idee e script
+(hook, scaletta al secondo, testo a schermo, momento del brano validato sulle sezioni misurate e ascoltabile, caption,
+hashtag) · C3 Calendario (limite settimanale per fase, pianificazione automatica, vista lista/mese, export .ics) ·
+C4 Statistiche (import CSV/XLSX di TikTok e Instagram con riconoscimento colonne, metriche calcolate dall'app,
+collegamento ai post del calendario, analisi AI solo sui numeri).
+
 ## Sincronizzazione (Dexie Cloud)
 
 Attiva quando `src/lib/cloudConfig.ts` contiene l'URL del database (creato con il workflow

@@ -17,6 +17,8 @@ import VideoLabPage from './pages/VideoLabPage'
 import VideoPage from './pages/VideoPage'
 import VideoBookPage from './pages/VideoBookPage'
 import VideoChecklistPage from './pages/VideoChecklistPage'
+import ContentLabPage from './pages/ContentLabPage'
+import CampaignPage from './pages/CampaignPage'
 
 // HashRouter: necessario su GitHub Pages (nessun server che gestisce le rotte)
 export default function App() {
@@ -41,7 +43,8 @@ export default function App() {
             <Route path="video" element={<VideoLabPage />} />
             <Route path="video/:videoId" element={<VideoPage />} />
             <Route path="video/:videoId/checklist" element={<VideoChecklistPage />} />
-            <Route path="content" element={<ModulePage id="content" />} />
+            <Route path="content" element={<ContentLabPage />} />
+            <Route path="content/:campaignId" element={<CampaignPage />} />
             <Route path="art" element={<ModulePage id="art" />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<div className="page"><div className="notice err">Pagina non trovata.</div></div>} />

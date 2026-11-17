@@ -3,7 +3,6 @@
  * Mostra cosa arriverà, senza simulare funzioni che non esistono.
  */
 const INFO: Record<string, { idx: string; title: string; phases: { id: string; text: string }[] }> = {
-  content: { idx: '03', title: 'Content Lab', phases: [{ id: '—', text: 'Script short, calendari editoriali, analisi performance. Da pianificare.' }] },
   art: { idx: '04', title: 'Art Direction', phases: [{ id: '—', text: 'Moodboard, palette, identità visiva, prompt immagini. Da pianificare.' }] },
 }
 
