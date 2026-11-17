@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from 'dexie'
 import dexieCloud from 'dexie-cloud-addon'
 import { CLOUD_DB_URL, LOCAL_ONLY_TABLES } from './cloudConfig'
 import type { Campaign } from './content/types'
+import type { ArtKit } from './art/types'
 import type { AudioAnalysis } from './audio/types'
 import type { VideoImage, VideoProject } from './video/types'
 
@@ -100,7 +101,7 @@ export interface AiNote {
   id: string
   scope: 'track' | 'project'
   refId: string
-  kind: 'testo-analisi' | 'testo-brainstorming' | 'beat' | 'contenuti-analisi'
+  kind: 'testo-analisi' | 'testo-brainstorming' | 'beat' | 'contenuti-analisi' | 'moodboard-critica'
   userNote: string
   markdown: string
   /** dati strutturati (es. concept beat in JSON) */
@@ -158,6 +159,7 @@ export const db = new Dexie('genos-ai-studio', CLOUD_ENABLED ? { addons: [dexieC
   chats: EntityTable<Chat, 'id'>
   aiNotes: EntityTable<AiNote, 'id'>
   campaigns: EntityTable<Campaign, 'id'>
+  artkits: EntityTable<ArtKit, 'id'>
 }
 
 db.version(1).stores({
@@ -221,6 +223,22 @@ db.version(6).stores({
   chats: 'id, projectId, updatedAt',
   aiNotes: 'id, refId, [refId+kind], createdAt',
   campaigns: 'id, projectId, updatedAt',
+})
+
+// v7: Art Direction Lab (un kit di identità per progetto)
+db.version(7).stores({
+  projects: 'id, name, status, updatedAt',
+  settings: 'key',
+  tracks: 'id, projectId, updatedAt',
+  versions: 'id, trackId, createdAt',
+  audioFiles: 'versionId',
+  diagnoses: 'id, versionId, createdAt',
+  videos: 'id, projectId, updatedAt',
+  videoImages: 'id, videoId',
+  chats: 'id, projectId, updatedAt',
+  aiNotes: 'id, refId, [refId+kind], createdAt',
+  campaigns: 'id, projectId, updatedAt',
+  artkits: 'id, projectId, updatedAt',
 })
 
 /** Elimina un video con tutte le sue immagini (moodboard e schede). */
@@ -331,12 +349,12 @@ export interface BackupStats { projects: number; tracks: number; versions: numbe
  * Restituisce un Blob costruito a pezzi, per non tenere in memoria un'unica stringa enorme.
  */
 export async function exportAll(opts: { includeAudio?: boolean } = {}): Promise<Blob> {
-  const [projects, videos, tracks, versions, diagnoses, chats, aiNotes, campaigns] = await Promise.all([
+  const [projects, videos, tracks, versions, diagnoses, chats, aiNotes, campaigns, artkits] = await Promise.all([
     db.projects.toArray(), db.videos.toArray(), db.tracks.toArray(), db.versions.toArray(),
-    db.diagnoses.toArray(), db.chats.toArray(), db.aiNotes.toArray(), db.campaigns.toArray(),
+    db.diagnoses.toArray(), db.chats.toArray(), db.aiNotes.toArray(), db.campaigns.toArray(), db.artkits.toArray(),
   ])
   const head = { app: 'genos-ai-studio', version: 3, exportedAt: new Date().toISOString(), includesAudio: !!opts.includeAudio }
-  const parts: BlobPart[] = [JSON.stringify({ ...head, projects, videos, tracks, versions: versions.map(versionOut), diagnoses, chats, aiNotes, campaigns }).slice(0, -1)]
+  const parts: BlobPart[] = [JSON.stringify({ ...head, projects, videos, tracks, versions: versions.map(versionOut), diagnoses, chats, aiNotes, campaigns, artkits }).slice(0, -1)]
   if (opts.includeAudio) {
     parts.push(',"audioFiles":[')
     let first = true
@@ -369,8 +387,9 @@ export async function importAll(json: string): Promise<BackupStats> {
   }
   const arr = <T,>(x: unknown) => (Array.isArray(x) ? (x as T[]) : [])
   const stats: BackupStats = { projects: data.projects.length, tracks: 0, versions: 0, audio: 0, texts: 0 }
-  await db.transaction('rw', [db.projects, db.videos, db.videoImages, db.tracks, db.versions, db.diagnoses, db.chats, db.aiNotes, db.audioFiles, db.campaigns], async () => {
+  await db.transaction('rw', [db.projects, db.videos, db.videoImages, db.tracks, db.versions, db.diagnoses, db.chats, db.aiNotes, db.audioFiles, db.campaigns, db.artkits], async () => {
     await db.campaigns.bulkPut(arr<Campaign>(data.campaigns))
+    await db.artkits.bulkPut(arr<ArtKit>(data.artkits))
     await db.projects.bulkPut(data.projects as Project[])
     await db.videos.bulkPut(arr<VideoProject>(data.videos))
     const tracks = arr<Track>(data.tracks); await db.tracks.bulkPut(tracks); stats.tracks = tracks.length

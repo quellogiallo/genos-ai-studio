@@ -88,6 +88,16 @@ hashtag) · C3 Calendario (limite settimanale per fase, pianificazione automatic
 C4 Statistiche (import CSV/XLSX di TikTok e Instagram con riconoscimento colonne, metriche calcolate dall'app,
 collegamento ai post del calendario, analisi AI solo sui numeri).
 
+## Art Direction Lab (A1–A4)
+
+Un kit per progetto. A1 Identità (3 direzioni proposte dall'AI con palette, font Google, regole, logo, immagini
+e identità sonora; la scelta diventa decisione del progetto, le altre finiscono tra le idee scartate; tutto
+modificabile; brand book stampabile) · A2 Moodboard (tue foto/render, colori misurati e compatibilità % con la
+palette, critica AI che vede le immagini solo con chiave API) · A3 Concept artwork (copertina, post, storia,
+locandina, merch) · A4 Compositore (5 layout, tua immagine, testi, grana, sfondo trasparente per merch,
+controlli di contrasto/risoluzione/zone sicure, export PNG alla risoluzione del formato). Nessun generatore
+di immagini AI: solo tue immagini, render e tipografia.
+
 ## Sincronizzazione (Dexie Cloud)
 
 Attiva quando `src/lib/cloudConfig.ts` contiene l'URL del database (creato con il workflow

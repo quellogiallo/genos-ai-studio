@@ -7,7 +7,7 @@ export const MODULES = [
   { to: '/music', idx: '01', label: 'Music Lab', short: 'Music', glyph: 'M', ready: true },
   { to: '/video', idx: '02', label: 'Video Lab', short: 'Video', glyph: 'V', ready: true },
   { to: '/content', idx: '03', label: 'Content Lab', short: 'Content', glyph: 'C', ready: true },
-  { to: '/art', idx: '04', label: 'Art Direction', short: 'Art', glyph: 'A', ready: false },
+  { to: '/art', idx: '04', label: 'Art Direction', short: 'Art', glyph: 'A', ready: true },
 ] as const
 
 export default function Layout() {
@@ -33,7 +33,7 @@ export default function Layout() {
             <span className="idx">//</span>Impostazioni
           </NavLink>
         </nav>
-        <div className="sidebar-foot label">v0.7</div>
+        <div className="sidebar-foot label">v1.0</div>
       </aside>
 
       <main className="main">

@@ -66,6 +66,9 @@ export const google: AIProvider = {
       if (req.audio && i === req.messages.length - 1 && m.role === 'user') {
         parts.unshift({ inline_data: { mime_type: req.audio.mime, data: req.audio.base64 } })
       }
+      if (req.images?.length && i === req.messages.length - 1 && m.role === 'user') {
+        parts.unshift(...req.images.map((im) => ({ inline_data: { mime_type: im.mime, data: im.base64 } })))
+      }
       return { role: m.role === 'assistant' ? 'model' : 'user', parts }
     })
     const res = await safeFetch(`${BASE}/models/${encodeURIComponent(req.model)}:generateContent`, {

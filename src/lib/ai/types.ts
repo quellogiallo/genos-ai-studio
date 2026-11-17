@@ -19,6 +19,8 @@ export interface ChatRequest {
   signal?: AbortSignal
   /** audio da far "ascoltare" al modello (solo provider che lo supportano) */
   audio?: { mime: string; base64: string }
+  /** immagini da far "guardare" al modello (Claude e Gemini) */
+  images?: { mime: string; base64: string }[]
   /** chiede una risposta in formato JSON (se il provider lo supporta) */
   json?: boolean
 }

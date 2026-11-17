@@ -82,7 +82,11 @@ export const anthropic: AIProvider = {
         model: req.model,
         max_tokens: req.maxTokens ?? 2048,
         system: req.system,
-        messages: req.messages,
+        messages: req.images?.length
+          ? req.messages.map((m, i) => (i === req.messages.length - 1 && m.role === 'user'
+            ? { role: 'user', content: [...req.images!.map((im) => ({ type: 'image', source: { type: 'base64', media_type: im.mime, data: im.base64 } })), { type: 'text', text: m.content }] }
+            : m))
+          : req.messages,
       }),
     })
     if (!res.ok) throw await readError(res)

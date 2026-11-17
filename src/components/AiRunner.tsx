@@ -10,6 +10,8 @@ export interface RunnerPrompt {
   maxTokens: number
   /** risposta in JSON (default true); false per testo/markdown */
   json?: boolean
+  /** immagini allegate (solo modalità con chiave: in "Copia per Claude" non vengono copiate) */
+  images?: { mime: string; base64: string }[]
 }
 
 /**
@@ -42,7 +44,7 @@ export default function AiRunner({ label, build, onResult, disabledReason }: {
     try {
       const p = await build()
       const r = await runTask(p.task, {
-        system: p.system, messages: [{ role: 'user', content: p.user }], maxTokens: p.maxTokens, signal: abort.current.signal, json: p.json ?? true,
+        system: p.system, messages: [{ role: 'user', content: p.user }], maxTokens: p.maxTokens, signal: abort.current.signal, json: p.json ?? true, images: p.images,
       })
       await onResult(r.text)
       setMeta(`${r.model} · ${r.inputTokens ?? '?'} in / ${r.outputTokens ?? '?'} out token`)

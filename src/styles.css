@@ -608,3 +608,34 @@ button.tag.solid:hover { color: #000; }
 .bar-col { flex: 1; height: 100%; display: flex; align-items: flex-end; min-width: 2px; }
 .bar { width: 100%; background: var(--y); min-height: 1px; }
 .bar-col:hover .bar { background: var(--fg); }
+
+/* ================= Art Direction Lab ================= */
+.id-prev { padding: 18px; position: relative; overflow: hidden; }
+.id-bar { height: 6px; width: 40%; margin-top: 14px; }
+.id-sw { display: flex; gap: 0; margin-top: 12px; }
+.id-sw span { flex: 1; height: 16px; }
+.card.chosen { border-color: var(--y); box-shadow: 4px 4px 0 var(--y); }
+.pal-edit { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.pal-item { display: flex; flex-direction: column; gap: 2px; }
+.pal-sw { display: block; height: 64px; border: 1px solid var(--line-2); cursor: pointer; position: relative; }
+.pal-sw input, .swatch-btn.custom input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.type-sample { font-size: clamp(26px, 6vw, 44px); font-weight: 800; line-height: 1; margin-top: 12px; overflow-wrap: anywhere; }
+.type-sample.small { font-size: 16px; font-weight: 400; margin-top: 6px; }
+.mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.mood-item { display: flex; flex-direction: column; gap: 6px; }
+.mood-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.mood-cols { display: flex; }
+.mood-cols span { flex: 1; height: 12px; }
+.art-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.art-card { display: flex; flex-direction: column; gap: 4px; background: transparent; border: 1px solid var(--line); padding: 8px; cursor: pointer; text-align: left; }
+.art-card:hover { border-color: var(--y); }
+.art-thumb { width: 100%; height: auto; display: block; background: repeating-conic-gradient(#222 0 25%, #1a1a1a 0 50%) 0 0 / 16px 16px; }
+.comp-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 820px) { .comp-grid { grid-template-columns: 1fr; } }
+.comp-canvas { background: repeating-conic-gradient(#222 0 25%, #1a1a1a 0 50%) 0 0 / 20px 20px; border: 1px solid var(--line); }
+.comp-canvas canvas { display: block; width: 100%; height: auto; }
+.comp-panel { border: 1px solid var(--line); padding: 14px; }
+.swatch-btn { width: 28px; height: 28px; border: 1px solid var(--line-2); cursor: pointer; padding: 0; position: relative; flex: none; }
+.swatch-btn.on { outline: 2px solid var(--y); outline-offset: 2px; }
+.swatch-btn.custom::after { content: '+'; position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; color: #fff; mix-blend-mode: difference; pointer-events: none; }
+.step .ok { color: var(--green); margin-left: 4px; }

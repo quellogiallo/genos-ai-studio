@@ -9,6 +9,7 @@ const LABEL: Record<AiNote['kind'], string> = {
   'testo-brainstorming': 'Brainstorming',
   beat: 'Concept beat',
   'contenuti-analisi': 'Analisi contenuti',
+  'moodboard-critica': 'Critica moodboard',
 }
 
 /** Elenco dei risultati AI salvati per un brano o un progetto. */

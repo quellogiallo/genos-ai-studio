@@ -5,7 +5,6 @@ import HomePage from './pages/HomePage'
 import ProjectsPage from './pages/ProjectsPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import SettingsPage from './pages/SettingsPage'
-import ModulePage from './pages/ModulePage'
 import MusicLabPage from './pages/MusicLabPage'
 import TrackPage from './pages/TrackPage'
 import ComparePage from './pages/ComparePage'
@@ -19,6 +18,8 @@ import VideoBookPage from './pages/VideoBookPage'
 import VideoChecklistPage from './pages/VideoChecklistPage'
 import ContentLabPage from './pages/ContentLabPage'
 import CampaignPage from './pages/CampaignPage'
+import ArtLabPage from './pages/ArtLabPage'
+import BrandBookPage from './pages/BrandBookPage'
 
 // HashRouter: necessario su GitHub Pages (nessun server che gestisce le rotte)
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
         <Routes>
           {/* libro di produzione: fuori dal layout, per stampare pulito */}
           <Route path="video/:videoId/book" element={<VideoBookPage />} />
+          <Route path="art/brandbook" element={<BrandBookPage />} />
           <Route element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="projects" element={<ProjectsPage />} />
@@ -45,7 +47,7 @@ export default function App() {
             <Route path="video/:videoId/checklist" element={<VideoChecklistPage />} />
             <Route path="content" element={<ContentLabPage />} />
             <Route path="content/:campaignId" element={<CampaignPage />} />
-            <Route path="art" element={<ModulePage id="art" />} />
+            <Route path="art" element={<ArtLabPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<div className="page"><div className="notice err">Pagina non trovata.</div></div>} />
           </Route>
