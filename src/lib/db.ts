@@ -306,7 +306,7 @@ const blobToB64 = (b: Blob) => new Promise<string>((res, rej) => {
   r.readAsDataURL(b)
 })
 
-export interface BackupStats { projects: number; tracks: number; versions: number; audio: number; texts: number }
+export interface BackupStats { projects: number; tracks: number; versions: number; /** file audio + immagini */ audio: number; texts: number }
 
 /**
  * Esporta tutto in JSON: progetti, Video Lab (testi), Music Lab (brani, testi, versioni con analisi,
@@ -330,6 +330,14 @@ export async function exportAll(opts: { includeAudio?: boolean } = {}): Promise<
       first = false
     }
     parts.push(']')
+    // immagini del Video Lab (moodboard, schede, storyboard)
+    parts.push(',"videoImages":[')
+    first = true
+    for (const img of await db.videoImages.toArray()) {
+      parts.push(`${first ? '' : ','}{"id":${JSON.stringify(img.id)},"videoId":${JSON.stringify(img.videoId)},"mime":${JSON.stringify(img.blob.type || 'image/jpeg')},"data":"`, await blobToB64(img.blob), '"}')
+      first = false
+    }
+    parts.push(']')
   }
   parts.push('}')
   return new Blob(parts, { type: 'application/json' })
@@ -344,7 +352,7 @@ export async function importAll(json: string): Promise<BackupStats> {
   }
   const arr = <T,>(x: unknown) => (Array.isArray(x) ? (x as T[]) : [])
   const stats: BackupStats = { projects: data.projects.length, tracks: 0, versions: 0, audio: 0, texts: 0 }
-  await db.transaction('rw', [db.projects, db.videos, db.tracks, db.versions, db.diagnoses, db.chats, db.aiNotes, db.audioFiles], async () => {
+  await db.transaction('rw', [db.projects, db.videos, db.videoImages, db.tracks, db.versions, db.diagnoses, db.chats, db.aiNotes, db.audioFiles], async () => {
     await db.projects.bulkPut(data.projects as Project[])
     await db.videos.bulkPut(arr<VideoProject>(data.videos))
     const tracks = arr<Track>(data.tracks); await db.tracks.bulkPut(tracks); stats.tracks = tracks.length
@@ -354,6 +362,10 @@ export async function importAll(json: string): Promise<BackupStats> {
     stats.texts = diag.length + chats.length + notes.length
     for (const a of arr<{ versionId: string; mime: string; data: string }>(data.audioFiles)) {
       await db.audioFiles.put({ versionId: a.versionId, blob: new Blob([fromB64(a.data)], { type: a.mime }) })
+      stats.audio++
+    }
+    for (const im of arr<{ id: string; videoId: string; mime: string; data: string }>(data.videoImages)) {
+      await db.videoImages.put({ id: im.id, videoId: im.videoId, blob: new Blob([fromB64(im.data)], { type: im.mime }) })
       stats.audio++
     }
   })

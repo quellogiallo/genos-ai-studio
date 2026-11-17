@@ -6,6 +6,7 @@ import {
   FORMAT_LABEL, MOOD_TAGS, SHEET_KINDS, TECHNIQUE_LABEL, fmtDur,
   type ArtDirection, type ConceptAnalysis, type MoodSearch, type MoodTag, type PaletteColor,
   type Scene, type Sheet, type SheetKind, type VideoProject,
+  SHOT_SIZES, type Shot, type ShotSize, type VideoTechnique, type ShootPlan, type EditPlan, type ColorPlan,
 } from './types'
 
 /* ============ contesto ============ */
@@ -33,7 +34,7 @@ function trackContext(t: TrackInfo): string {
   return lines.join('\n')
 }
 
-export type StepId = 'concept' | 'directions' | 'moodsearch' | 'sheets' | 'screenplay'
+export type StepId = 'concept' | 'directions' | 'moodsearch' | 'sheets' | 'screenplay' | 'storyboard' | 'prompts' | 'shoot' | 'edit' | 'color'
 
 /**
  * Tutto ciò che è già stato deciso per questo video, in ordine di workflow.
@@ -47,7 +48,7 @@ export function buildVideoContext(v: VideoProject, p: Project, track: TrackInfo 
   if (track) out.push('', trackContext(track))
   out.push('', `IDEA DI PARTENZA (parole dell'autore):\n${v.idea || '(vuota)'}`)
 
-  const order: StepId[] = ['concept', 'directions', 'moodsearch', 'sheets', 'screenplay']
+  const order: StepId[] = ['concept', 'directions', 'moodsearch', 'sheets', 'screenplay', 'storyboard', 'prompts', 'shoot', 'edit', 'color']
   const at = order.indexOf(upTo)
 
   const c = v.concept
@@ -91,7 +92,32 @@ export function buildVideoContext(v: VideoProject, p: Project, track: TrackInfo 
       if (s.continuity) out.push(`  Continuità: ${s.continuity}`)
     })
   }
+  if (at > 4 && v.scenes.length) {
+    out.push('', `SCENEGGIATURA APPROVATA${v.arc ? ` — arco: ${v.arc}` : ''}:`)
+    v.scenes.forEach((s, i) => {
+      out.push(`SCENA ${i + 1} · ${s.title || 'senza titolo'} · ${s.setting}${s.time ? ` · ${s.time}` : ''} · ${s.durationSec}s${s.music ? ` · musica: ${s.music}` : ''}`)
+      out.push(`  Azione: ${s.action}`)
+      if (s.sheets.length) out.push(`  Con: ${s.sheets.join(', ')}`)
+      if (s.intent) out.push(`  Intento: ${s.intent}`)
+    })
+  }
+  const shots = v.shots ?? []
+  if (at > 5 && shots.length) {
+    out.push('', 'INQUADRATURE (codice = scena.inquadratura):')
+    shotCodes(v).forEach(({ code, shot: t }) => {
+      out.push(`${code} [${t.technique === '3d' ? '3D' : 'reale'}] ${t.size}${t.angle ? `, ${t.angle}` : ''}${t.movement ? `, ${t.movement}` : ''}${t.lens ? `, ${t.lens}` : ''} · ${t.durationSec}s — ${t.description}${t.sheets.length ? ` (con ${t.sheets.join(', ')})` : ''}${t.light ? ` · luce: ${t.light}` : ''}${t.transition ? ` · uscita: ${t.transition}` : ''}`)
+    })
+  }
   return out.join('\n')
+}
+
+/** Codici leggibili "scena.inquadratura" (es. 3.2), nell'ordine delle scene. */
+export function shotCodes(v: VideoProject): { code: string; shot: Shot; scene: Scene; sceneIndex: number }[] {
+  const out: { code: string; shot: Shot; scene: Scene; sceneIndex: number }[] = []
+  v.scenes.forEach((scene, i) => {
+    ;(v.shots ?? []).filter((t) => t.sceneId === scene.id).forEach((shot, j) => out.push({ code: `${i + 1}.${j + 1}`, shot, scene, sceneIndex: i }))
+  })
+  return out
 }
 
 /* ============ sistema ============ */
@@ -351,4 +377,203 @@ export function parseScreenplay(text: string): ScreenplayResult {
     .filter((s) => s.action || s.title)
   if (!scenes.length) throw new Error('La risposta non contiene scene. Riprova.')
   return { arc: str(j.arco), scenes, missing: list(j.schede_mancanti) }
+}
+
+
+/* ============ V2 · storyboard ============ */
+
+export function storyboardPrompt(ctx: string, v: VideoProject, sceneIds: string[], note: string): StepPrompt {
+  const target = v.scenes.map((s, i) => ({ s, n: i + 1 })).filter((x) => sceneIds.includes(x.s.id))
+  return {
+    task: 'creative', system: SYSTEM, maxTokens: 16000,
+    user: `${ctx}
+${note ? `\nINDICAZIONE DELL'AUTORE: ${note}\n` : ''}
+COMPITO — PASSO 6: STORYBOARD
+Dividi in inquadrature ${target.length === v.scenes.length ? 'tutte le scene' : `solo ${target.length === 1 ? 'la scena' : 'le scene'} ${target.map((x) => x.n).join(', ')}`}. Per ogni scena la somma delle durate delle inquadrature deve essere uguale alla durata della scena.
+- Linguaggio di camera coerente con la direzione artistica (sezione "Camera" e regole visive).
+- Tecnica: "reale" per riprese dal vero, "3d" per inquadrature realizzate in 3D/codice, solo tra le tecniche indicate per il video.
+- Inquadrature fattibili con una produzione piccola e indipendente: niente droni, gru o effetti costosi se non indispensabili, e in quel caso segnala l'alternativa economica nella descrizione.
+- Usa solo i nomi esatti delle schede condivise.
+Piani ammessi: ${SHOT_SIZES.join(', ')}.
+
+Schema JSON:
+{
+  "inquadrature": [
+    {
+      "scena": 1,
+      "piano": "primo piano",
+      "angolazione": "altezza occhi / dal basso / dall'alto / zenitale / olandese…",
+      "movimento": "fissa / panoramica / carrello / camera a mano / zoom / orbita (3D)…",
+      "ottica": "focale indicativa (es. 35mm) o camera virtuale",
+      "luce": "come è illuminato il fotogramma",
+      "descrizione": "cosa si vede nel fotogramma: composizione, soggetti, azione",
+      "durata_sec": 4,
+      "transizione": "stacco netto / dissolvenza / match cut / raccordo sul movimento…",
+      "schede": ["nome esatto"],
+      "tecnica": "reale",
+      "suono": "cosa succede nella musica in quel momento (facoltativo)"
+    }
+  ]
+}`,
+  }
+}
+
+const sizeOf = (v: unknown): ShotSize => {
+  const s = str(v).toLowerCase()
+  return (SHOT_SIZES as readonly string[]).find((x) => x === s) as ShotSize
+    ?? (SHOT_SIZES as readonly string[]).find((x) => s.includes(x)) as ShotSize
+    ?? (/dettagl/.test(s) ? 'dettaglio' : /primissim/.test(s) ? 'primissimo piano' : /primo/.test(s) ? 'primo piano' : /mezz/.test(s) ? 'mezza figura' : /americ/.test(s) ? 'piano americano' : /intera/.test(s) ? 'figura intera' : /lunghissim/.test(s) ? 'campo lunghissimo' : /lungo/.test(s) ? 'campo lungo' : 'totale')
+}
+
+/** Restituisce le nuove inquadrature, indicizzate per id di scena. */
+export function parseStoryboard(text: string, v: VideoProject, allowed: VideoTechnique[]): Map<string, Shot[]> {
+  const j = extractJson(text)
+  const out = new Map<string, Shot[]>()
+  for (const o of objs(j.inquadrature)) {
+    const n = Math.round(Number(o.scena))
+    const scene = v.scenes[n - 1]
+    if (!scene) continue
+    const tech = oneOf<VideoTechnique>(o.tecnica, ['reale', '3d'] as const, allowed[0] ?? 'reale')
+    const shot: Shot = {
+      id: uid(), sceneId: scene.id, size: sizeOf(o.piano), angle: str(o.angolazione), movement: str(o.movimento), lens: str(o.ottica),
+      light: str(o.luce), description: str(o.descrizione), durationSec: Math.max(0, Math.round((Number(o.durata_sec) || 0) * 10) / 10),
+      transition: str(o.transizione), sheets: list(o.schede), technique: allowed.includes(tech) ? tech : allowed[0] ?? 'reale',
+      sound: str(o.suono), prompt: '', note3d: '',
+    }
+    if (!shot.description) continue
+    out.set(scene.id, [...(out.get(scene.id) ?? []), shot])
+  }
+  if (!out.size) throw new Error('La risposta non contiene inquadrature valide. Riprova.')
+  return out
+}
+
+/* ============ V2 · prompt per inquadratura ============ */
+
+export function shotPromptsPrompt(ctx: string, codes: string[]): StepPrompt {
+  return {
+    task: 'creative', system: SYSTEM, maxTokens: 16000,
+    user: `${ctx}
+
+COMPITO — PASSO 8: PROMPT PER INQUADRATURA
+Per le inquadrature ${codes.join(', ')} scrivi:
+- "prompt": un prompt in INGLESE per un generatore di immagini, per ottenere un fotogramma di riferimento dello storyboard. Deve ripetere ogni volta, con le stesse parole, l'aspetto delle schede presenti (coerenza tra inquadrature), la palette e il look della direzione artistica, il tipo di piano, l'angolazione, la luce e la composizione. Niente nomi di artisti, attori o marchi reali. Massimo 600 caratteri.
+- "note_3d": SOLO per le inquadrature con tecnica 3D, indicazioni tecniche in italiano per realizzarle con codice/3D (geometrie, materiali, luci, percorso della camera virtuale, eventuali shader o effetti, cosa animare a tempo di musica). Stringa vuota per le inquadrature reali.
+
+Schema JSON:
+{ "prompt": [ { "codice": "1.1", "prompt": "…", "note_3d": "" } ] }`,
+  }
+}
+
+export function parseShotPrompts(text: string): Map<string, { prompt: string; note3d: string }> {
+  const j = extractJson(text)
+  const out = new Map<string, { prompt: string; note3d: string }>()
+  for (const o of objs(j.prompt)) {
+    const code = str(o.codice).replace(/^s/i, '')
+    if (code) out.set(code, { prompt: str(o.prompt), note3d: str(o.note_3d) })
+  }
+  if (!out.size) throw new Error('La risposta non contiene prompt. Riprova.')
+  return out
+}
+
+/* ============ V3 · piano di riprese ============ */
+
+export function shootPrompt(ctx: string, note: string): StepPrompt {
+  return {
+    task: 'technical', system: SYSTEM, maxTokens: 12000,
+    user: `${ctx}
+${note ? `\nVINCOLI DELL'AUTORE (giorni disponibili, luoghi, attrezzatura posseduta…): ${note}\n` : ''}
+COMPITO — PASSO 9: PIANO DI RIPRESE
+Organizza le inquadrature in blocchi di lavoro (giornate o mezze giornate) per girare in modo efficiente, NON in ordine di racconto: raggruppa per luogo, momento della giornata e luce, poi per configurazione di camera. Le inquadrature 3D vanno in blocchi separati di lavoro al computer.
+Ogni inquadratura deve comparire in un solo blocco. Non inventare attrezzatura che l'autore possiede: se non lo sai, elenca il minimo indispensabile e alternative economiche.
+
+Schema JSON:
+{
+  "blocchi": [
+    { "titolo": "Giorno 1 — mattina", "luogo": "…", "momento": "…", "inquadrature": ["1.1", "3.2"], "preparazione": "cosa preparare prima", "attrezzatura": ["…"], "note": "rischi, sicurezza, alternative" }
+  ],
+  "attrezzatura_generale": ["…"],
+  "oggetti_di_scena": ["…"],
+  "rischi": ["rischio + come ridurlo"]
+}`,
+  }
+}
+
+export function parseShoot(text: string, v: VideoProject): ShootPlan {
+  const j = extractJson(text)
+  const byCode = new Map(shotCodes(v).map((x) => [x.code, x.shot.id]))
+  const days = objs(j.blocchi).map((o) => ({
+    id: uid(), title: str(o.titolo), location: str(o.luogo), time: str(o.momento),
+    shotIds: list(o.inquadrature).map((c) => byCode.get(c.replace(/^s/i, ''))).filter((x): x is string => !!x),
+    prep: str(o.preparazione), gear: list(o.attrezzatura), notes: str(o.note),
+  })).filter((d) => d.title || d.shotIds.length)
+  if (!days.length) throw new Error('La risposta non contiene un piano di riprese. Riprova.')
+  return { days, gear: list(j.attrezzatura_generale), props: list(j.oggetti_di_scena), risks: list(j.rischi), updatedAt: Date.now() }
+}
+
+/* ============ V3 · montaggio ============ */
+
+export function editPrompt(ctx: string, note: string): StepPrompt {
+  return {
+    task: 'creative', system: SYSTEM, maxTokens: 8000,
+    user: `${ctx}
+${note ? `\nINDICAZIONE DELL'AUTORE: ${note}\n` : ''}
+COMPITO — PASSO 10: PIANO DI MONTAGGIO
+Definisci come montare il video sulla musica: ritmo dei tagli per sezione del brano (usa sezioni e BPM misurati se ci sono; un taglio "a tempo" cade su multipli di battiti), momenti chiave da sincronizzare, transizioni e cosa evitare. Concreto e applicabile in qualsiasi programma di montaggio.
+
+Schema JSON:
+{
+  "approccio": "idea di montaggio in 2–3 frasi",
+  "sezioni": [ { "sezione": "A 0:00–0:32", "ritmo": "lento / medio / serrato + perché", "tagli": "ogni quanti battiti o secondi, e su cosa tagliare" } ],
+  "momenti_chiave": [ { "tempo": "1:04", "cosa": "cosa deve succedere esattamente lì" } ],
+  "transizioni": ["…"],
+  "da_evitare": ["…"]
+}`,
+  }
+}
+
+export function parseEdit(text: string): EditPlan {
+  const j = extractJson(text)
+  const plan: EditPlan = {
+    approach: str(j.approccio),
+    sections: objs(j.sezioni).map((o) => ({ section: str(o.sezione), rhythm: str(o.ritmo), cuts: str(o.tagli) })).filter((x) => x.section || x.rhythm),
+    keyMoments: objs(j.momenti_chiave).map((o) => ({ time: str(o.tempo), what: str(o.cosa) })).filter((x) => x.what),
+    transitions: list(j.transizioni), avoid: list(j.da_evitare), updatedAt: Date.now(),
+  }
+  if (!plan.approach && !plan.sections.length) throw new Error('La risposta non contiene un piano di montaggio. Riprova.')
+  return plan
+}
+
+/* ============ V3 · color ============ */
+
+export function colorPrompt(ctx: string, software: string): StepPrompt {
+  return {
+    task: 'technical', system: SYSTEM, maxTokens: 8000,
+    user: `${ctx}
+
+SOFTWARE DI COLOR DELL'AUTORE: ${software || 'non indicato (usa DaVinci Resolve, gratuito)'}
+
+COMPITO — PASSO 11: COLOR GRADING
+Traduci la palette e il look della direzione artistica in un piano di color grading applicabile. Valori indicativi (da verificare a occhio, su un monitor il più neutro possibile). Se il video ha parti in 3D, indica come impostare il render (spazio colore, tone mapping, esposizione) perché si fonda con le riprese reali.
+
+Schema JSON:
+{
+  "look_generale": "descrizione del look finale",
+  "parametri": [ { "nome": "contrasto / temperatura / saturazione / curve / ombre / alte luci / grana…", "valore": "valore indicativo", "perche": "…" } ],
+  "per_scena": [ { "scena": "1", "look": "variazione rispetto al look generale", "note": "…" } ],
+  "passaggi": ["passo operativo nel software indicato"],
+  "render_3d": "impostazioni per le parti 3D (vuoto se non ce ne sono)"
+}`,
+  }
+}
+
+export function parseColor(text: string, software: string): ColorPlan {
+  const j = extractJson(text)
+  const plan: ColorPlan = {
+    overall: str(j.look_generale), software,
+    params: objs(j.parametri).map((o) => ({ name: str(o.nome), value: str(o.valore), why: str(o.perche) })).filter((x) => x.name),
+    perScene: objs(j.per_scena).map((o) => ({ scene: str(o.scena), look: str(o.look), note: str(o.note) })).filter((x) => x.look || x.note),
+    steps: list(j.passaggi), render3d: str(j.render_3d), updatedAt: Date.now(),
+  }
+  if (!plan.overall && !plan.params.length) throw new Error('La risposta non contiene un piano colore. Riprova.')
+  return plan
 }

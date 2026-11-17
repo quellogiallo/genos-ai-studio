@@ -60,7 +60,7 @@ export default function SettingsPage() {
     setBackupBusy(true)
     try {
       const st = await importAll(await f.text())
-      toast(`Importati: ${st.projects} progetti, ${st.tracks} brani, ${st.versions} versioni, ${st.texts} tra diagnosi/chat/note${st.audio ? `, ${st.audio} file audio` : ''}`)
+      toast(`Importati: ${st.projects} progetti, ${st.tracks} brani, ${st.versions} versioni, ${st.texts} tra diagnosi/chat/note${st.audio ? `, ${st.audio} file audio/immagini` : ''}`)
     } catch (e) { toast((e as Error).message, 'err') } finally { setBackupBusy(false) }
   }
 
@@ -95,10 +95,10 @@ export default function SettingsPage() {
 
       <section className="section">
         <div className="section-head"><span className="num">03</span><h2 className="display" style={{ fontSize: '1.2rem' }}>Backup</h2></div>
-        <p className="dim" style={{ marginTop: -6, fontSize: 13 }}>Tutto è salvato nel browser di questo dispositivo: se cancelli i dati del browser lo perdi, e telefono e PC hanno archivi separati. Il backup contiene progetti, testi del Video Lab e tutto il Music Lab (brani, testi delle canzoni, versioni con le analisi, diagnosi, conversazioni Ableton, concept beat, reference). Non contiene le chiavi API né le immagini di moodboard e schede. I file audio solo se spunti l'opzione qui sotto.</p>
+        <p className="dim" style={{ marginTop: -6, fontSize: 13 }}>Tutto è salvato nel browser di questo dispositivo: se cancelli i dati del browser lo perdi, e telefono e PC hanno archivi separati. Il backup contiene progetti, testi del Video Lab e tutto il Music Lab (brani, testi delle canzoni, versioni con le analisi, diagnosi, conversazioni Ableton, concept beat, reference). Non contiene le chiavi API. File audio e immagini del Video Lab solo se spunti l'opzione qui sotto.</p>
         <label className="row" style={{ gap: 8, fontSize: 14, marginBottom: 12, cursor: 'pointer' }}>
           <input type="checkbox" checked={includeAudio} onChange={(e) => setIncludeAudio(e.target.checked)} style={{ accentColor: 'var(--y)', width: 18, height: 18 }} />
-          Includi i file audio <span className="label">(file molto più grande: ~1,4 volte i tuoi audio. Meglio da PC)</span>
+          Includi file audio e immagini <span className="label">(file molto più grande: ~1,4 volte i tuoi file. Meglio da PC)</span>
         </label>
         <div className="row">
           <button className="btn" disabled={backupBusy} onClick={doExport}>{backupBusy ? <><div className="spinner" /> Attendi…</> : 'Esporta backup'}</button>

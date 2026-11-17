@@ -3,14 +3,16 @@ import { db, uid } from '../db'
 import { dominantColors, shrinkImage } from './palette'
 
 /** URL temporaneo per mostrare un'immagine salvata nel database locale. */
-export function useImageUrl(imageId: string | undefined): string | undefined {
-  const [state, setState] = useState<{ id: string; url: string }>()
+export function useImageUrl(imageId: string | undefined): string | undefined | null {
+  const [state, setState] = useState<{ id: string; url: string | null }>()
   useEffect(() => {
     if (!imageId) return
     let alive = true
     let made: string | undefined
     db.videoImages.get(imageId).then((row) => {
-      if (!alive || !row) return
+      if (!alive) return
+      // null = immagine non presente su questo dispositivo (es. dati arrivati dalla sincronizzazione)
+      if (!row) { setState({ id: imageId, url: null }); return }
       made = URL.createObjectURL(row.blob)
       setState({ id: imageId, url: made })
     })

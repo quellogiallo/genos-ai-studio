@@ -109,6 +109,7 @@ export function Chips({ colors }: { colors: string[] | undefined }) {
 export function StoredImage({ imageId, alt, className }: { imageId: string | undefined; alt: string; className?: string }) {
   const url = useImageUrl(imageId)
   if (!imageId) return null
+  if (url === null) return <div className={`${className ?? ''} img-wait img-missing`} title="Immagine salvata su un altro dispositivo">Immagine su un altro dispositivo</div>
   if (!url) return <div className={`${className ?? ''} img-wait`}><div className="spinner" /></div>
   return <img className={className} src={url} alt={alt} loading="lazy" />
 }

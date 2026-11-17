@@ -15,6 +15,8 @@ import ReferencesPage from './pages/ReferencesPage'
 import BeatsPage from './pages/BeatsPage'
 import VideoLabPage from './pages/VideoLabPage'
 import VideoPage from './pages/VideoPage'
+import VideoBookPage from './pages/VideoBookPage'
+import VideoChecklistPage from './pages/VideoChecklistPage'
 
 // HashRouter: necessario su GitHub Pages (nessun server che gestisce le rotte)
 export default function App() {
@@ -22,6 +24,8 @@ export default function App() {
     <AppStateProvider>
       <HashRouter>
         <Routes>
+          {/* libro di produzione: fuori dal layout, per stampare pulito */}
+          <Route path="video/:videoId/book" element={<VideoBookPage />} />
           <Route element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="projects" element={<ProjectsPage />} />
@@ -36,6 +40,7 @@ export default function App() {
             <Route path="music/assistant/:chatId" element={<AbletonChat />} />
             <Route path="video" element={<VideoLabPage />} />
             <Route path="video/:videoId" element={<VideoPage />} />
+            <Route path="video/:videoId/checklist" element={<VideoChecklistPage />} />
             <Route path="content" element={<ModulePage id="content" />} />
             <Route path="art" element={<ModulePage id="art" />} />
             <Route path="settings" element={<SettingsPage />} />

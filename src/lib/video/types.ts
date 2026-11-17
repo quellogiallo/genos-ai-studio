@@ -2,7 +2,7 @@
  * Video Lab — modello dati.
  * Un "video" vive dentro un progetto e attraversa il workflow:
  * concept → direzione artistica → moodboard → schede → sceneggiatura
- * (V2: storyboard, shot list, prompt · V3: riprese, montaggio, color, export).
+ * → storyboard → shot list → prompt → piano di riprese → montaggio → color → export.
  */
 
 export type VideoFormat = 'videoclip' | 'teaser' | 'visualizer' | 'corto' | 'altro'
@@ -122,6 +122,82 @@ export interface Scene {
   intent: string
 }
 
+/* ---------------- V2: storyboard, shot list, prompt ---------------- */
+
+export const SHOT_SIZES = [
+  'campo lunghissimo', 'campo lungo', 'totale', 'figura intera', 'piano americano',
+  'mezza figura', 'primo piano', 'primissimo piano', 'dettaglio',
+] as const
+export type ShotSize = (typeof SHOT_SIZES)[number]
+
+/** Un'inquadratura: unità dello storyboard, della shot list e del piano di riprese. */
+export interface Shot {
+  id: string
+  sceneId: string
+  size: ShotSize
+  angle: string
+  movement: string
+  /** focale / ottica (riprese) o camera virtuale (3D) */
+  lens: string
+  light: string
+  /** cosa si vede nel fotogramma */
+  description: string
+  durationSec: number
+  /** come si passa all'inquadratura successiva */
+  transition: string
+  sheets: string[]
+  technique: VideoTechnique
+  sound: string
+  /** prompt (inglese) per generare un fotogramma di riferimento/storyboard */
+  prompt: string
+  /** indicazioni tecniche per le inquadrature in 3D/codice */
+  note3d: string
+  /** immagine dello storyboard (schizzo, foto o immagine generata) in videoImages */
+  frameImageId?: string
+  /** girata / completata (checklist da telefono) */
+  done?: boolean
+}
+
+/* ---------------- V3: riprese, montaggio, color ---------------- */
+
+export interface ShootDay {
+  id: string
+  title: string
+  location: string
+  time: string
+  shotIds: string[]
+  prep: string
+  gear: string[]
+  notes: string
+}
+
+export interface ShootPlan {
+  days: ShootDay[]
+  gear: string[]
+  props: string[]
+  risks: string[]
+  updatedAt: number
+}
+
+export interface EditPlan {
+  approach: string
+  sections: { section: string; rhythm: string; cuts: string }[]
+  keyMoments: { time: string; what: string }[]
+  transitions: string[]
+  avoid: string[]
+  updatedAt: number
+}
+
+export interface ColorPlan {
+  overall: string
+  software: string
+  params: { name: string; value: string; why: string }[]
+  perScene: { scene: string; look: string; note: string }[]
+  steps: string[]
+  render3d: string
+  updatedAt: number
+}
+
 export interface VideoProject {
   id: string
   projectId: string
@@ -143,6 +219,14 @@ export interface VideoProject {
   scenes: Scene[]
   /** nota di regia sull'arco complessivo */
   arc: string
+  /** V2 — inquadrature (storyboard / shot list / prompt) */
+  shots?: Shot[]
+  /** V3 */
+  shootPlan?: ShootPlan
+  editPlan?: EditPlan
+  colorPlan?: ColorPlan
+  /** voci spuntate nella checklist da telefono (attrezzatura, oggetti di scena) */
+  checklist?: string[]
   createdAt: number
   updatedAt: number
 }

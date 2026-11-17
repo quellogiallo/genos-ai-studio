@@ -10,6 +10,13 @@ import DirectionStep from '../components/video/DirectionStep'
 import MoodboardStep from '../components/video/MoodboardStep'
 import SheetsStep from '../components/video/SheetsStep'
 import ScreenplayStep from '../components/video/ScreenplayStep'
+import StoryboardStep from '../components/video/StoryboardStep'
+import ShotListStep from '../components/video/ShotListStep'
+import PromptsStep from '../components/video/PromptsStep'
+import ShootStep from '../components/video/ShootStep'
+import EditStep from '../components/video/EditStep'
+import ColorStep from '../components/video/ColorStep'
+import ExportStep from '../components/video/ExportStep'
 
 const STEPS = [
   { id: 'concept', n: '01', label: 'Concept', done: (v: VideoProject) => !!v.concept, C: ConceptStep },
@@ -17,11 +24,13 @@ const STEPS = [
   { id: 'moodboard', n: '03', label: 'Moodboard', done: (v: VideoProject) => v.mood.length > 0, C: MoodboardStep },
   { id: 'schede', n: '04', label: 'Schede', done: (v: VideoProject) => v.sheets.length > 0, C: SheetsStep },
   { id: 'sceneggiatura', n: '05', label: 'Sceneggiatura', done: (v: VideoProject) => v.scenes.length > 0, C: ScreenplayStep },
-] as const
-
-const LOCKED = [
-  ['06', 'Storyboard', 'V2'], ['07', 'Shot list', 'V2'], ['08', 'Prompt AI', 'V2'],
-  ['09', 'Riprese', 'V3'], ['10', 'Montaggio', 'V3'], ['11', 'Color', 'V3'],
+  { id: 'storyboard', n: '06', label: 'Storyboard', done: (v: VideoProject) => (v.shots?.length ?? 0) > 0, C: StoryboardStep },
+  { id: 'shotlist', n: '07', label: 'Shot list', done: (v: VideoProject) => (v.shots?.length ?? 0) > 0, C: ShotListStep },
+  { id: 'prompt', n: '08', label: 'Prompt AI', done: (v: VideoProject) => (v.shots ?? []).some((s) => s.prompt), C: PromptsStep },
+  { id: 'riprese', n: '09', label: 'Riprese', done: (v: VideoProject) => !!v.shootPlan, C: ShootStep },
+  { id: 'montaggio', n: '10', label: 'Montaggio', done: (v: VideoProject) => !!v.editPlan, C: EditStep },
+  { id: 'color', n: '11', label: 'Color', done: (v: VideoProject) => !!v.colorPlan, C: ColorStep },
+  { id: 'export', n: '12', label: 'Export', done: () => false, C: ExportStep },
 ] as const
 
 export default function VideoPage() {
@@ -58,7 +67,7 @@ export default function VideoPage() {
   }
 
   async function remove() {
-    if (!video || !confirm(`Eliminare definitivamente il video "${video.title}" con moodboard, schede e sceneggiatura?`)) return
+    if (!video || !confirm(`Eliminare definitivamente il video "${video.title}" con moodboard, schede, sceneggiatura, storyboard e piani?`)) return
     await deleteVideo(video.id)
     toast('Video eliminato')
     nav('/video')
@@ -117,9 +126,6 @@ export default function VideoPage() {
             aria-current={s.id === stepId ? 'step' : undefined} onClick={() => setParams({ s: s.id })}>
             <span className="mono">{s.n}</span>{s.label}
           </button>
-        ))}
-        {LOCKED.map(([n, l, ph]) => (
-          <span key={n} className="step locked" title={`Arriva con la fase ${ph}`}><span className="mono">{n}</span>{l}<span className="mono ph">{ph}</span></span>
         ))}
       </nav>
 

@@ -71,6 +71,20 @@ Nella pagina del brano: **Confronta versioni A/B** (servono 2 versioni analizzat
 - **Concept beat** (`/music/beats`): 3 concept con groove a 16 step ascoltabile nel browser, palette in Ableton,
   arrangiamento, prompt per generatori musicali AI. Può usare i dati delle reference.
 
+## Video Lab (V1–V3)
+
+Workflow a 12 passi per ogni video: 01 Concept · 02 Direzione artistica · 03 Moodboard · 04 Schede condivise ·
+05 Sceneggiatura · 06 Storyboard (inquadrature con schema del fotogramma o immagine caricata) · 07 Shot list ·
+08 Prompt AI (prompt immagine in inglese + note tecniche 3D) · 09 Piano di riprese (con AI o raggruppamento automatico) ·
+10 Montaggio (timeline sul brano, aggancio ai battiti, piano dei tagli) · 11 Color grading · 12 Export
+(libro di produzione stampabile/PDF e checklist da telefono con spunte salvate).
+
+## Sincronizzazione (Dexie Cloud)
+
+Attiva quando `src/lib/cloudConfig.ts` contiene l'URL del database (creato con il workflow
+"Configura database cloud"). Login con email + codice; si sincronizza tutto tranne chiavi API, file audio
+e immagini (restano sul dispositivo). Al primo avvio i dati locali precedenti vengono copiati nel database sincronizzato.
+
 Chiave Gemini gratuita: https://aistudio.google.com/apikey → Setup → Google (Gemini) → Salva e verifica.
 
 ## Come si usa
