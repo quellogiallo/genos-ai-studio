@@ -7,6 +7,7 @@ import type { AnalysisProgress } from '../lib/audio/types'
 import { useApp } from '../components/AppState'
 import AnalysisReport, { fmtTime } from '../components/AnalysisReport'
 import DiagnosisPanel from '../components/DiagnosisPanel'
+import Amber from '../components/Amber'
 
 export default function TrackPage() {
   const { trackId } = useParams()
@@ -106,8 +107,7 @@ export default function TrackPage() {
         <div className="label" style={{ marginTop: 10 }}>WAV o AIFF consigliati (misure più complete). Anche MP3, M4A. Il file resta sul tuo dispositivo.</div>
         {busy && (
           <div style={{ marginTop: 14 }}>
-            <div className="row"><div className="spinner" /><b>{busy.p.stage}</b><div className="spacer" /><span className="mono">{Math.round(busy.p.pct * 100)}%</span></div>
-            <div className="progress"><span style={{ width: `${busy.p.pct * 100}%` }} /></div>
+            <Amber pct={busy.p.pct * 100} label={busy.p.stage} />
           </div>
         )}
       </div>

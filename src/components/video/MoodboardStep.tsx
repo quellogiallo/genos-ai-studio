@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import AiRunner from '../AiRunner'
+import Amber from '../Amber'
 import { useApp } from '../AppState'
 import { db, uid } from '../../lib/db'
 import { storeImage } from '../../lib/video/hooks'
@@ -11,12 +12,13 @@ export default function MoodboardStep({ video, project, track, update }: StepPro
   const { toast } = useApp()
   const fileRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(0)
+  const [total, setTotal] = useState(0)
   const [filter, setFilter] = useState<MoodTag | 'tutte'>('tutte')
   const [link, setLink] = useState('')
 
   async function addFiles(files: FileList) {
     const added: MoodItem[] = []
-    setBusy(files.length)
+    setBusy(files.length); setTotal(files.length)
     for (const f of Array.from(files)) {
       try {
         const { imageId, colors } = await storeImage(video.id, f)
@@ -66,7 +68,7 @@ export default function MoodboardStep({ video, project, track, update }: StepPro
       <div className="card">
         <div className="row">
           <button className="btn primary" type="button" disabled={busy > 0} onClick={() => fileRef.current?.click()}>
-            {busy > 0 ? <><div className="spinner" /> Carico ({busy})…</> : '+ Immagini'}
+            {busy > 0 ? <><div className="spinner" /> Carico…</> : '+ Immagini'}
           </button>
           <input ref={fileRef} type="file" accept="image/*" multiple hidden
             onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = '' }} />
@@ -75,6 +77,7 @@ export default function MoodboardStep({ video, project, track, update }: StepPro
             <button className="btn sm" disabled={!link.trim()}>Aggiungi</button>
           </form>
         </div>
+        {busy > 0 && <Amber pct={((total - busy) / Math.max(1, total)) * 100} label={`Carico le immagini · ${total - busy + 1} di ${total}`} />}
       </div>
 
       <div className="filters">
