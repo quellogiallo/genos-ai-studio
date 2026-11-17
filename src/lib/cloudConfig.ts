@@ -4,7 +4,7 @@
  * e il database accetta solo richieste dal sito dell'app.
  * Vuoto = sincronizzazione disattivata, l'app lavora solo in locale.
  */
-export const CLOUD_DB_URL = ''
+export const CLOUD_DB_URL = 'https://zrt07piks.dexie.cloud'
 
 /** Tabelle che restano solo sul dispositivo (chiavi API, file pesanti). */
 export const LOCAL_ONLY_TABLES = ['settings', 'audioFiles', 'videoImages']
